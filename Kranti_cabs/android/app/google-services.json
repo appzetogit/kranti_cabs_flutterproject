@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1092116530873",
+    "project_id": "kranticabs-2cfd1",
+    "storage_bucket": "kranticabs-2cfd1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1092116530873:android:1445c65c66715dfea3fd68",
+        "android_client_info": {
+          "package_name": "com.kranticabs.user"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBcp-P8Gxh7r7huHJVM8A1hwvRUG3gO940"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

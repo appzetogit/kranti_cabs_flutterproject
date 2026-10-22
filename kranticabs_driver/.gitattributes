@@ -1,0 +1,5 @@
+
+# Shell scripts and git hooks must keep LF. With CRLF the shebang becomes
+# "sh" and the hook silently does not run on Windows.
+*.sh           text eol=lf
+.githooks/*    text eol=lf

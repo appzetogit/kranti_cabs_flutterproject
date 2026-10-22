@@ -1,0 +1,23 @@
+{
+  "@@locale": "hi",
+
+  "selectLanguageTitle": "अपनी भाषा चुनें",
+  "selectLanguageSubtitle": "Kranti Cabs इसी भाषा में ऐप दिखाएगा और सफर के दौरान बोलेगा।",
+  "selectLanguageContinue": "आगे बढ़ें",
+  "selectLanguageChangeHint": "आप इसे बाद में सेटिंग्स में बदल सकते हैं।",
+
+  "languageTitle": "भाषा",
+  "languageSetTo": "भाषा {language} पर सेट की गई",
+
+  "settingsTitle": "सेटिंग्स",
+  "settingsNotifications": "नोटिफिकेशन सेटिंग्स",
+  "settingsAppTheme": "ऐप थीम",
+  "settingsPrivacyPolicy": "प्राइवेसी पॉलिसी",
+  "settingsSecurity": "सुरक्षा",
+  "settingsTerms": "सेवा की शर्तें",
+  "settingsAbout": "हमारे बारे में",
+
+  "rideVoiceTitle": "राइड वॉइस अनाउंसमेंट",
+  "rideVoiceSubtitle": "सफर की जानकारी अपनी भाषा में सुनें",
+  "rideVoiceUnavailable": "इस डिवाइस पर वॉइस उपलब्ध नहीं है"
+}

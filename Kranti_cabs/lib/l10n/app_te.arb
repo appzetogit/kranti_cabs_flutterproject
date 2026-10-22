@@ -1,0 +1,23 @@
+{
+  "@@locale": "te",
+
+  "selectLanguageTitle": "మీ భాషను ఎంచుకోండి",
+  "selectLanguageSubtitle": "Kranti Cabs యాప్‌లో మరియు ప్రయాణ సమయంలో ఇదే భాషను ఉపయోగిస్తుంది.",
+  "selectLanguageContinue": "కొనసాగించండి",
+  "selectLanguageChangeHint": "దీన్ని తర్వాత సెట్టింగ్‌లలో మార్చుకోవచ్చు.",
+
+  "languageTitle": "భాష",
+  "languageSetTo": "భాష {language}కి సెట్ చేయబడింది",
+
+  "settingsTitle": "సెట్టింగ్‌లు",
+  "settingsNotifications": "నోటిఫికేషన్ సెట్టింగ్‌లు",
+  "settingsAppTheme": "యాప్ థీమ్",
+  "settingsPrivacyPolicy": "గోప్యతా విధానం",
+  "settingsSecurity": "భద్రత",
+  "settingsTerms": "సేవా నిబంధనలు",
+  "settingsAbout": "మా గురించి",
+
+  "rideVoiceTitle": "ప్రయాణ వాయిస్ ప్రకటనలు",
+  "rideVoiceSubtitle": "ప్రయాణ సమాచారాన్ని మీ భాషలో వినండి",
+  "rideVoiceUnavailable": "ఈ పరికరంలో వాయిస్ అందుబాటులో లేదు"
+}

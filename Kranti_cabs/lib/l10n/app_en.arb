@@ -1,0 +1,31 @@
+{
+  "@@locale": "en",
+
+  "selectLanguageTitle": "Choose your language",
+  "@selectLanguageTitle": {
+    "description": "Title of the first-run language picker shown after the splash screen"
+  },
+  "selectLanguageSubtitle": "Kranti Cabs will use this for the app and for what you hear during a ride.",
+  "selectLanguageContinue": "Continue",
+  "selectLanguageChangeHint": "You can change this later in Settings.",
+
+  "languageTitle": "Language",
+  "languageSetTo": "Language set to {language}",
+  "@languageSetTo": {
+    "placeholders": {
+      "language": { "type": "String" }
+    }
+  },
+
+  "settingsTitle": "Settings",
+  "settingsNotifications": "Notification settings",
+  "settingsAppTheme": "App theme",
+  "settingsPrivacyPolicy": "Privacy policy",
+  "settingsSecurity": "Security",
+  "settingsTerms": "Terms of service",
+  "settingsAbout": "About",
+
+  "rideVoiceTitle": "Ride voice announcements",
+  "rideVoiceSubtitle": "Hear trip updates spoken aloud in your language",
+  "rideVoiceUnavailable": "Voice is not available on this device"
+}

@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Compact card pinned to the top of the screen, so the driver can read the
+     offer without it swallowing the whole display.
+
+     Kept to plain framework views on purpose: this inflates while the device is
+     still waking, often with no Flutter engine and no AppCompat context. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/zc_offer_scrim">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="50dp"
+        android:orientation="vertical"
+        android:background="@drawable/zc_offer_card_bg"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="14dp">
+
+        <!-- Vehicle chip: art + label, both driven by the push payload -->
+        <LinearLayout
+            android:id="@+id/offer_vehicle_chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/zc_offer_chip_bg"
+            android:paddingStart="8dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp">
+
+            <ImageView
+                android:id="@+id/offer_vehicle_art"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:scaleType="fitCenter"
+                android:contentDescription="@null" />
+
+            <TextView
+                android:id="@+id/offer_vehicle_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/zc_offer_ink"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <!-- Fare per trip km, next to the vehicle name; hidden without a distance -->
+            <TextView
+                android:id="@+id/offer_per_km"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:maxLines="1"
+                android:textColor="@color/zc_offer_ink"
+                android:textSize="13sp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Fare headline -->
+        <TextView
+            android:id="@+id/offer_fare"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textColor="@color/zc_offer_ink"
+            android:textSize="34sp"
+            android:textStyle="bold" />
+
+        <!-- Pickup: distance above the address, marked with a dot -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginTop="7dp"
+                android:background="@drawable/zc_offer_dot_pickup" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/offer_pickup_distance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/zc_offer_ink"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/offer_pickup_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    android:lineSpacingExtra="1dp"
+                    android:textColor="@color/zc_offer_muted"
+                    android:textSize="13.5sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Drop: same shape, marked with a down arrow -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="8dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center_horizontal"
+                android:text="@string/zc_offer_arrow"
+                android:textColor="@color/zc_offer_ink"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/offer_trip_distance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/zc_offer_ink"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/offer_drop_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    android:lineSpacingExtra="1dp"
+                    android:textColor="@color/zc_offer_muted"
+                    android:textSize="13.5sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Decline sits small and quiet next to a full-width Accept, so the
+             common action is the easy one to hit. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <Button
+                android:id="@+id/offer_decline"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/zc_offer_decline_bg"
+                android:stateListAnimator="@null"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp"
+                android:text="@string/zc_offer_decline_symbol"
+                android:textAllCaps="false"
+                android:textColor="@color/zc_offer_decline"
+                android:textSize="22sp" />
+
+            <Button
+                android:id="@+id/offer_accept"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/zc_offer_accept_bg"
+                android:stateListAnimator="@null"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

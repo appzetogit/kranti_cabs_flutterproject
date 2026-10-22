@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="zc_offer_channel_name">Ride offers</string>
+    <string name="zc_offer_channel_description">Full-screen alert for a new ride request</string>
+    <string name="zc_offer_to_pickup">to pickup</string>
+    <string name="zc_offer_trip">trip</string>
+    <string name="zc_offer_decline">Decline</string>
+    <!-- Compact decline affordance on the offer card, paired with a full-width Accept. -->
+    <string name="zc_offer_decline_symbol">–</string>
+    <string name="zc_offer_arrow">↓</string>
+    <string name="zc_offer_accept">Accept</string>
+    <string name="zc_offer_accept_countdown">Accept · %1$ds</string>
+    <string name="zc_offer_title">New ride request</string>
+    <string name="zc_offer_body">Tap to view the booking.</string>
+</resources>

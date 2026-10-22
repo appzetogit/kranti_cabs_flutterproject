@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="zc_offer_scrim">#99000000</color>
+    <color name="zc_offer_card">#FFFFFFFF</color>
+    <color name="zc_offer_ink">#FF101828</color>
+    <color name="zc_offer_muted">#FF667085</color>
+    <color name="zc_offer_hairline">#FFE4E7EC</color>
+    <!-- The app's own brand teal (AppColors.primary), so the card does not look
+         like it came from a different product than the rest of the app. -->
+    <color name="zc_offer_accent">#FF069291</color>
+    <color name="zc_offer_pickup">#FF00875A</color>
+    <color name="zc_offer_drop">#FFD92D20</color>
+    <color name="zc_offer_chip">#FFF2F4F7</color>
+    <color name="zc_offer_decline">#FF667085</color>
+
+    <!-- Translucent so the home screen / lock screen stays visible behind the
+         card. Without windowIsTranslucent the activity paints a full opaque
+         window and the alert reads as "the app opened", not as an overlay. -->
+    <style name="RideOfferTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+</resources>

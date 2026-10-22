@@ -1,0 +1,136 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- No ACCESS_BACKGROUND_LOCATION, on purpose. Location keeps flowing after
+         the driver switches to Google Maps because the stream runs inside a
+         location foreground service started while the app is on screen, and
+         that only needs while-in-use permission (LocationService.streamSettings).
+         Declaring background location would add a Play policy review for no
+         gain. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- For geolocator's location foreground service, declared below. Android
+         stops delivering location to a backgrounded app without one, which
+         silently ends live tracking. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <!-- Doze defers FCM for battery-optimised apps, which is exactly the state a
+         parked driver's phone is in. Not grantable by a runtime dialog — it
+         opens its own Settings page, see RideOfferPermissions. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+
+    <application
+        android:label="KrantiCabs Rider"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher"
+        android:largeHeap="true">
+        <!-- Camera capture during document upload hands off to a separate,
+             memory-heavy Camera activity; on low-RAM phones Android reclaims
+             this app's background process to make room, which drops the
+             photo the driver just took (see retrieveLostData() usage in the
+             document upload screens). largeHeap makes that reclaim less
+             likely to trigger in the first place. -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <!-- Specifies an Android theme to apply to this Activity as soon as
+                 the Android process has started. This theme is visible to the user
+                 while the Flutter UI initializes. After that, this theme continues
+                 to determine the Window background behind the Flutter UI. -->
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <!-- The full-screen ride-offer card. Native, not Flutter: it has to be
+             posted from Kotlin while the app may be killed, and it must draw
+             over the home/lock screen rather than launch the app. -->
+        <activity
+            android:name=".RideOfferActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:theme="@style/RideOfferTheme"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:showOnLockScreen="true"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true" />
+
+        <!-- Priority 1 so this wins over the plugin's own service registration,
+             which stays declared below it. Safe because it subclasses
+             FlutterFirebaseMessagingService and calls super — see
+             RideRequestMessagingService for why that matters. -->
+        <service
+            android:name=".RideRequestMessagingService"
+            android:exported="false"
+            android:directBootAware="true">
+            <intent-filter android:priority="1">
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <!-- geolocator's location service, which keeps location flowing while
+             the driver is online or on a trip and has switched to another app.
+             The plugin declares it as well; it is repeated here so the
+             foreground service type Play review asks about is visible in the
+             app's own manifest. -->
+        <service
+            android:name="com.baseflow.geolocator.GeolocatorLocationService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyArBbII2fgAuVaycfkEAm1GcuyvKPTSWyc" />
+        <!-- Without these, a data/notification push lands on the default low
+             channel and never makes a sound for an incoming ride. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="ride_requests" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher" />
+        <!-- Don't delete the meta-data below.
+             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+    <!-- Required to query activities that can process text, see:
+         https://developer.android.com/training/package-visibility and
+         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+
+         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Required on Android 11+ so flutter_tts can discover the device's
+             text-to-speech engine (AI voice announcements of new orders). -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE"/>
+        </intent>
+    </queries>
+</manifest>
