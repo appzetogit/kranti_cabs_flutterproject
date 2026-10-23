@@ -17,6 +17,9 @@ class MainActivity : FlutterActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Drop touches that arrive while another app's window covers ours
+        // (tapjacking / overlay auto clickers tapping Accept through it).
+        window.decorView.filterTouchesWhenObscured = true
         wakeScreenAndUnlock()
     }
 

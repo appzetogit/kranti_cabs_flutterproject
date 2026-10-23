@@ -13,6 +13,10 @@ class VehicleTypeModel {
   final String dispatchType;
 
   final String iconType;
+
+  /// 'bike' | 'auto' | 'car' (or empty) from Admin -> Vehicle Types.
+  final String category;
+
   /// Which delivery card this vehicle appears under in the parcel flow
   /// ('trucks' | '2wheeler' | 'auto' | 'movers'). Empty for taxi vehicles.
   final String deliveryCategory;
@@ -39,6 +43,7 @@ class VehicleTypeModel {
     required this.transportType,
     this.dispatchType = 'normal',
     required this.iconType,
+    this.category = '',
     this.deliveryCategory = '',
     required this.capacity,
     required this.image,
@@ -58,6 +63,7 @@ class VehicleTypeModel {
       transportType: (json['transport_type'] ?? 'taxi').toString(),
       dispatchType: (json['dispatch_type'] ?? 'normal').toString().trim().toLowerCase(),
       iconType: (json['icon_types'] ?? 'car').toString(),
+      category: (json['category'] ?? '').toString().trim().toLowerCase(),
       deliveryCategory: (json['delivery_category'] ?? '').toString(),
       capacity: int.tryParse('${json['capacity'] ?? 0}') ?? 0,
       image: (json['image'] ?? '').toString(),
@@ -82,6 +88,17 @@ class VehicleTypeModel {
     if (moduleId == null || moduleId.isEmpty) return true;
     if (appModules.isEmpty) return true;
     return appModules.contains(moduleId);
+  }
+
+  /// The class station parking and state / MCD tax are priced by: the
+  /// vehicle's category when it is bike / auto / car, else its icon type,
+  /// else car - the same rule the server uses at booking.
+  String get chargeClass {
+    const classes = {'bike', 'auto', 'car'};
+    if (classes.contains(category)) return category;
+    final icon = iconType.trim().toLowerCase();
+    if (classes.contains(icon)) return icon;
+    return 'car';
   }
 
   /// Whether a rider may name their own price on this vehicle.

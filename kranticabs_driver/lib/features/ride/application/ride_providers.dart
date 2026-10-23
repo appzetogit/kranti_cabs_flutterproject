@@ -32,6 +32,14 @@ class RideNotifier extends StateNotifier<RideFlowState> {
 
   static const Duration _offerPollInterval = Duration(seconds: 5);
 
+  /// Fires when an in-app accept got no answer (socket dropped mid-accept), so
+  /// the server is asked whether the ride is ours before Accept is offered
+  /// again. Never resends the accept by itself: the server counts every
+  /// attempt, and a retry loop looks like an auto clicker.
+  Timer? _acceptTimeout;
+
+  static const Duration _acceptAnswerWait = Duration(seconds: 12);
+
   /// Ordering signal for the rider app: every location send tags itself with
   /// this counter, and the rider keeps only the highest one seen, so a
   /// packet delayed by network jitter can never move the marker backward.
@@ -62,6 +70,7 @@ class RideNotifier extends StateNotifier<RideFlowState> {
   void dispose() {
     _offerPollTimer?.cancel();
     _offerPollTimer = null;
+    _acceptTimeout?.cancel();
     super.dispose();
   }
 
@@ -247,6 +256,7 @@ class RideNotifier extends StateNotifier<RideFlowState> {
 
     socket.on(SocketEvents.rideAcceptFailed, (data) {
       final map = _asMap(data);
+      _acceptTimeout?.cancel();
       _stopRingtone();
       state = state.copyWith(
         clearIncomingRequest: true,
@@ -257,6 +267,7 @@ class RideNotifier extends StateNotifier<RideFlowState> {
 
     socket.on(SocketEvents.rideAccepted, (data) {
       final rideId = _asMap(data)?['rideId']?.toString();
+      _acceptTimeout?.cancel();
       _stopRingtone();
       _announceStatus('accepted');
       state = state.copyWith(
@@ -342,9 +353,34 @@ class RideNotifier extends StateNotifier<RideFlowState> {
     // Rejected transitions (wrong pickup OTP, out-of-order status) come back as
     // a generic socket error; without this they would fail silently and the
     // driver would just see nothing happen.
+    //
+    // Accept refusals carry a `code`. A ride that is gone (taken, cancelled,
+    // or never offered to / declined by this driver) closes the offer card so
+    // it cannot be tapped again; the accept limit only asks the driver to wait.
     socket.on(SocketEvents.error, (data) {
+      final map = _asMap(data);
+      final message = map?['message']?.toString();
+      final code = map?['code']?.toString();
+      _acceptTimeout?.cancel();
+
+      if (code == 'RIDE_UNAVAILABLE' || code == 'RIDE_NOT_OFFERED') {
+        _stopRingtone();
+        state = state.copyWith(
+          busy: false,
+          clearIncomingRequest: true,
+          acceptError: (message != null && message.isNotEmpty)
+              ? message
+              : 'This ride is no longer available',
+        );
+        return;
+      }
+      if (code == 'RIDE_ACCEPT_RATE_LIMITED') {
+        state = state.copyWith(busy: false);
+        SnackbarUtils.error('Please wait a moment');
+        return;
+      }
+
       state = state.copyWith(busy: false);
-      final message = _asMap(data)?['message']?.toString();
       if (message != null && message.isNotEmpty) SnackbarUtils.error(message);
     });
   }
@@ -500,6 +536,19 @@ class RideNotifier extends StateNotifier<RideFlowState> {
     _stopRingtone();
     state = state.copyWith(busy: true, clearAcceptError: true);
     ref.read(socketServiceProvider).acceptRide(req.rideId);
+
+    _acceptTimeout?.cancel();
+    _acceptTimeout = Timer(_acceptAnswerWait, () => unawaited(_resolveUnansweredAccept(req.rideId)));
+  }
+
+  /// No answer to an accept: it may still have won, so ask the server before
+  /// letting the driver try again.
+  Future<void> _resolveUnansweredAccept(String rideId) async {
+    if (!state.busy || state.incomingRequest?.rideId != rideId) return;
+    if (await _adoptRideIfAlreadyMine(rideId)) return;
+    if (state.incomingRequest?.rideId != rideId) return;
+    state = state.copyWith(busy: false);
+    SnackbarUtils.error('Connection problem - tap Accept again if the offer is still open');
   }
 
   /// Ride ids currently being accepted, so a repeated drain of the native queue

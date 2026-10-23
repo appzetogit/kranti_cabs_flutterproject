@@ -41,6 +41,9 @@ class RideOfferActivity : Activity() {
 
         showOverLockScreen()
         setContentView(R.layout.activity_ride_offer)
+        // Ignore Accept/Reject taps made through another app's overlay window
+        // (tapjacking, overlay-based auto clickers).
+        window.decorView.filterTouchesWhenObscured = true
 
         val offer = RideOfferPayload.fromExtras(intent?.extras)
         if (offer == null) {

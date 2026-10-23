@@ -27,6 +27,7 @@ import 'parcel_photo_upload_screen.dart';
 import 'parcel_widgets.dart';
 import 'ride_payment_collect_sheet.dart';
 import 'rental_widgets.dart';
+import 'location_charges_note.dart';
 import 'toll_widgets.dart';
 
 class ActiveRideScreen extends ConsumerStatefulWidget {
@@ -1241,6 +1242,15 @@ class _ActiveRideScreenState extends ConsumerState<ActiveRideScreen>
                                 const SizedBox(height: 12),
                                 TollChargesNote(
                                   tolls: ride.tollCharges,
+                                  dark: true,
+                                ),
+                              ],
+
+                              // Airport / station / tax / parking in the fare.
+                              if (ride.locationCharges.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                LocationChargesNote(
+                                  charges: ride.locationCharges,
                                   dark: true,
                                 ),
                               ],

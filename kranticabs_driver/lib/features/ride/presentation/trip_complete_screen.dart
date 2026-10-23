@@ -9,6 +9,7 @@ import '../../../core/utils/snackbar_utils.dart';
 import '../application/ride_providers.dart';
 import '../data/ride_model.dart';
 import 'parcel_widgets.dart';
+import 'location_charges_note.dart';
 import 'toll_widgets.dart';
 
 class TripCompleteScreen extends ConsumerStatefulWidget {
@@ -470,6 +471,10 @@ class _TripCompleteScreenState extends ConsumerState<TripCompleteScreen> {
                     if (ride.tollCharges.hasTolls) ...[
                       const SizedBox(height: 6),
                       TollChargesNote(tolls: ride.tollCharges, dark: false),
+                    ],
+                    if (ride.locationCharges.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      LocationChargesNote(charges: ride.locationCharges, dark: false),
                     ],
                     const SizedBox(height: 6),
                     Row(

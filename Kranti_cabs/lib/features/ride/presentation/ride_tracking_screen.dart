@@ -982,11 +982,25 @@ class _FarePaymentRow extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              paid ? 'Fare $_fare paid online' : 'Fare $_fare',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  paid ? 'Fare $_fare paid online' : 'Fare $_fare',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800),
+                ),
+                // Airport / station / tax / parking already inside the fare.
+                if (ride.locationCharges.isNotEmpty)
+                  Text(
+                    'Incl. ${ride.locationCharges.map((c) => '${c.label} ₹${c.amount.round()}').join(', ')}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11.5, fontWeight: FontWeight.w600),
+                  ),
+              ],
             ),
           ),
           if (!paid)

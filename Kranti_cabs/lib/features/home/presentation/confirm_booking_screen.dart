@@ -247,6 +247,12 @@ class ConfirmBookingScreen extends ConsumerWidget {
                           const SizedBox(height: 8),
                           _FareRow(label: 'Airport fee', value: _rupees(fare.airportFee)),
                         ],
+                        // Station entry fee and state / MCD tax, in the total.
+                        if (fare != null)
+                          for (final line in fare.locationCharges) ...[
+                            const SizedBox(height: 8),
+                            _FareRow(label: line.label, value: _rupees(line.amount)),
+                          ],
                         if (fare != null && fare.platformFee > 0) ...[
                           const SizedBox(height: 8),
                           _FareRow(label: 'Platform fee (incl. GST)', value: _rupees(fare.platformFee)),
@@ -276,6 +282,21 @@ class ConfirmBookingScreen extends ConsumerWidget {
                             ),
                           ],
                         ),
+                        // Parking is not in the total: the server adds it when
+                        // the trip ends, from how long the driver waited.
+                        if (fare != null && fare.parkingFrom > 0) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            'Plus station / airport parking${fare.parkingVaries ? ' from' : ''} '
+                            '${_rupees(fare.parkingFrom)}, added at the end of the trip from how '
+                            'long the driver waits there.',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

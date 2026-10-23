@@ -121,6 +121,9 @@ class TripDetailScreen extends StatelessWidget {
                 if (ride.estimatedDurationMinutes > 0)
                   _DetailRow(label: 'Duration', value: '${ride.estimatedDurationMinutes.toStringAsFixed(0)} min'),
                 _DetailRow(label: 'Payment method', value: ride.paymentMethod.isEmpty ? '—' : ride.paymentMethod),
+                // Airport / station / tax / parking, already in the total.
+                for (final charge in ride.locationCharges)
+                  _DetailRow(label: charge.label, value: '₹${charge.amount.toStringAsFixed(0)}'),
                 const Divider(color: Color(0xFF2E2E2E), height: 24),
                 _DetailRow(
                   label: 'Total Fare',

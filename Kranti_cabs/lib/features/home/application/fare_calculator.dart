@@ -1,4 +1,5 @@
 import '../data/models/set_price_model.dart';
+import '../data/models/trip_category.dart';
 
 class FareBreakdown {
   final double baseFare;
@@ -11,6 +12,15 @@ class FareBreakdown {
 
   /// The airport's flat charges on an airport trip, already in [total].
   final double airportFee;
+
+  /// Railway station entry fee and state / MCD tax, already in [total].
+  final List<LocationChargeLine> locationCharges;
+
+  /// The least the hub's pickup parking can cost. NOT in [total]: the server
+  /// adds it at trip end from how long the driver waited.
+  final double parkingFrom;
+  final bool parkingVaries;
+
   final double total;
 
   const FareBreakdown({
@@ -20,8 +30,20 @@ class FareBreakdown {
     required this.serviceTax,
     this.platformFee = 0,
     this.airportFee = 0,
+    this.locationCharges = const [],
+    this.parkingFrom = 0,
+    this.parkingVaries = false,
     required this.total,
   });
+
+  /// The charges in [total] that the server adds to the fare by itself.
+  double get serverAddedFees =>
+      airportFee + locationCharges.fold<double>(0, (sum, line) => sum + line.amount);
+
+  /// What to send as the booking's `fare`: [total] without the airport fee,
+  /// station fee and state / MCD tax. The server adds those itself, so
+  /// sending [total] would charge the rider for them twice.
+  double get tripFare => double.parse((total - serverAddedFees).toStringAsFixed(2));
 }
 
 class FareCalculator {
@@ -41,7 +63,11 @@ class FareCalculator {
     bool isRoundTrip = false,
     bool isOutstation = false,
     double airportFee = 0,
+    List<LocationChargeLine> locationCharges = const [],
+    double parkingFrom = 0,
+    bool parkingVaries = false,
   }) {
+    final locationTotal = locationCharges.fold<double>(0, (sum, line) => sum + line.amount);
     final useOutstation = isOutstation && pricing.supportsOutstation;
 
     final basePrice = useOutstation ? pricing.outstationBasePrice : pricing.basePrice;
@@ -80,9 +106,14 @@ class FareCalculator {
       serviceTax: serviceTax,
       platformFee: platformFee,
       airportFee: airportFee,
-      // The airport fee is charged once per trip, like the platform fee.
+      locationCharges: locationCharges,
+      parkingFrom: parkingFrom,
+      parkingVaries: parkingVaries,
+      // The airport fee, station fee and tax are charged once per trip, like
+      // the platform fee.
       total: double.parse(
-        (double.parse(total.toStringAsFixed(0)) + platformFee + airportFee).toStringAsFixed(2),
+        (double.parse(total.toStringAsFixed(0)) + platformFee + airportFee + locationTotal)
+            .toStringAsFixed(2),
       ),
     );
   }

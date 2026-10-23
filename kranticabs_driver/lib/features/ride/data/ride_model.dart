@@ -1,3 +1,4 @@
+import 'location_charges.dart';
 import 'parcel_info.dart';
 import 'ride_rental.dart';
 import 'toll_charges.dart';
@@ -118,6 +119,10 @@ class RideModel {
   /// Hourly-rental terms and (once settled) the final bill; null otherwise.
   final RideRental? rental;
 
+  /// Airport fee, station entry fee, state / MCD tax and (once the trip ends)
+  /// parking, each already inside [fare].
+  final List<RideLocationCharge> locationCharges;
+
   const RideModel({
     required this.id,
     required this.status,
@@ -149,6 +154,7 @@ class RideModel {
     this.parcel = ParcelInfo.none,
     this.tollCharges = TollCharges.none,
     this.rental,
+    this.locationCharges = const [],
   });
 
   bool get isParcel => (serviceType ?? '').toLowerCase() == 'parcel';
@@ -199,6 +205,7 @@ class RideModel {
       parcel: ParcelInfo.fromJson(json['parcel']),
       tollCharges: TollCharges.fromJson(json['tollCharges']),
       rental: RideRental.maybe(json['rental']),
+      locationCharges: RideLocationCharge.listFromJson(json['locationCharges']),
     );
   }
 
@@ -250,6 +257,7 @@ class RideModel {
       parcel: parcel ?? this.parcel,
       tollCharges: tollCharges,
       rental: rental,
+      locationCharges: locationCharges,
     );
   }
 }

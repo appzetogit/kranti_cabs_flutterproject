@@ -136,8 +136,14 @@ class RideDetailScreen extends ConsumerWidget {
           final durationMin = (ride.estimatedDurationMinutes > 0)
               ? ride.estimatedDurationMinutes.toInt()
               : 0;
-          final baseFare = ride.baseFare > 0 ? ride.baseFare : ride.fare;
           final totalFare = ride.fare;
+          // Location charges (airport / station / tax / parking) are inside the
+          // fare; with any present the base row shows the trip alone so the
+          // rows add up to the total.
+          final locationTotal = ride.locationCharges.fold<double>(0, (sum, c) => sum + c.amount);
+          final baseFare = ride.locationCharges.isNotEmpty
+              ? (totalFare - locationTotal).clamp(0, double.infinity).toDouble()
+              : (ride.baseFare > 0 ? ride.baseFare : ride.fare);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -471,6 +477,24 @@ class RideDetailScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
+                      for (final charge in ride.locationCharges) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                charge.label,
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textSecondary),
+                              ),
+                            ),
+                            Text(
+                              '₹${charge.amount.toStringAsFixed(2)}',
+                              style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: textPrimary),
+                            ),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: 6),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,

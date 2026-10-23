@@ -90,6 +90,14 @@ class _RideRequestScreenState extends ConsumerState<RideRequestScreen> {
       final isStillVisible = ModalRoute.of(context)?.isCurrent ?? false;
       if (next.incomingRequest == null && isStillVisible && context.canPop()) {
         context.pop();
+        return;
+      }
+
+      // An accept that ended without closing the offer (accept limit hit, or
+      // no answer and the ride is not ours) lets the driver tap Accept once
+      // more by hand. Nothing is retried automatically.
+      if ((previous?.busy ?? false) && !next.busy && next.incomingRequest != null && _responding) {
+        setState(() => _responding = false);
       }
     });
 

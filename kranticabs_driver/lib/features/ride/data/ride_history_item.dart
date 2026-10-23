@@ -1,3 +1,4 @@
+import 'location_charges.dart';
 import 'parcel_info.dart';
 
 class RideHistoryItem {
@@ -19,6 +20,9 @@ class RideHistoryItem {
   final String? serviceType;
   final ParcelInfo parcel;
 
+  /// Location charges inside [fare], when the history payload carries them.
+  final List<RideLocationCharge> locationCharges;
+
   const RideHistoryItem({
     required this.id,
     required this.status,
@@ -37,6 +41,7 @@ class RideHistoryItem {
     required this.riderName,
     this.serviceType,
     this.parcel = ParcelInfo.none,
+    this.locationCharges = const [],
   });
 
   factory RideHistoryItem.fromJson(Map<String, dynamic> json) {
@@ -59,6 +64,7 @@ class RideHistoryItem {
       riderName: (user?['name'] ?? '').toString(),
       serviceType: json['serviceType']?.toString(),
       parcel: json['parcel'] is Map ? ParcelInfo.fromJson(Map<String, dynamic>.from(json['parcel'] as Map)) : ParcelInfo.none,
+      locationCharges: RideLocationCharge.listFromJson(json['locationCharges']),
     );
   }
 

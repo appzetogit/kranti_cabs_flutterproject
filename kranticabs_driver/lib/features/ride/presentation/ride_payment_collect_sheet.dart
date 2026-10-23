@@ -9,6 +9,7 @@ import '../../profile/application/profile_providers.dart';
 import '../data/ride_model.dart';
 import '../application/ride_providers.dart';
 import 'rental_widgets.dart';
+import 'location_charges_note.dart';
 import 'toll_widgets.dart';
 
 /// Shown to the driver when a trip ends. Displays the fare, the driver's own
@@ -149,6 +150,11 @@ class _SheetBodyState extends State<_SheetBody> {
           if (widget.ride.tollCharges.hasTolls) ...[
             const SizedBox(height: 8),
             TollChargesNote(tolls: widget.ride.tollCharges, dark: true),
+          ],
+          // From the latest copy of the ride: parking is added at completion.
+          if (_ride.locationCharges.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            LocationChargesNote(charges: _ride.locationCharges, dark: true),
           ],
           const SizedBox(height: 18),
           if (_paidOnline) ...[

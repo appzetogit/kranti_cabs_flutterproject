@@ -143,6 +143,30 @@ class RideStopPoint {
   }
 }
 
+/// One location charge inside a ride's fare, from the ride payload's
+/// `locationCharges`: `{ code, label, amount }`. Codes: airport_fee,
+/// station_entry, state_tax, mcd_tax, pickup_parking, drop_fee.
+class RideLocationCharge {
+  final String code;
+  final String label;
+  final double amount;
+
+  const RideLocationCharge({required this.code, required this.label, required this.amount});
+
+  static List<RideLocationCharge> listFromJson(dynamic value) {
+    if (value is! List) return const [];
+    return value
+        .whereType<Map>()
+        .map((e) => RideLocationCharge(
+              code: (e['code'] ?? '').toString(),
+              label: (e['label'] ?? '').toString(),
+              amount: double.tryParse('${e['amount'] ?? 0}') ?? 0,
+            ))
+        .where((e) => e.amount > 0 && e.label.isNotEmpty)
+        .toList();
+  }
+}
+
 class RideModel {
   final String rideId;
   final String status;
@@ -209,6 +233,11 @@ class RideModel {
   /// [RideBiddingInfo.none] for an ordinary fixed-fare trip.
   final RideBiddingInfo bidding;
 
+  /// Airport fee, station entry fee, state / MCD tax and (once the trip ends)
+  /// parking - each already inside [fare]. Shown as a breakdown, never added
+  /// to [fare] again.
+  final List<RideLocationCharge> locationCharges;
+
   const RideModel({
     required this.rideId,
     required this.status,
@@ -244,6 +273,7 @@ class RideModel {
     this.vehicleTypeId = '',
     this.parcel = const ParcelModel(),
     this.bidding = RideBiddingInfo.none,
+    this.locationCharges = const [],
   });
 
   bool get isParcel => (serviceType ?? '').toLowerCase() == 'parcel';
@@ -342,6 +372,7 @@ class RideModel {
       bidding: RideBiddingInfo.fromJson(json),
       vehicleType: json['vehicleType']?.toString(),
       vehicleIconType: json['vehicleIconType']?.toString(),
+      locationCharges: RideLocationCharge.listFromJson(json['locationCharges']),
     );
   }
 
@@ -396,6 +427,7 @@ class RideModel {
       vehicleTypeId: vehicleTypeId,
       parcel: parcel,
       bidding: bidding,
+      locationCharges: locationCharges,
     );
   }
 

@@ -11,7 +11,12 @@ class InvoiceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final date = ride.completedAt ?? ride.createdAt;
-    final baseFare = ride.baseFare > 0 ? ride.baseFare : ride.fare;
+    // With location charges in the fare, the base row is the trip alone so the
+    // rows add up to the total.
+    final locationTotal = ride.locationCharges.fold<double>(0, (sum, c) => sum + c.amount);
+    final baseFare = ride.locationCharges.isNotEmpty
+        ? (ride.fare - locationTotal).clamp(0, double.infinity).toDouble()
+        : (ride.baseFare > 0 ? ride.baseFare : ride.fare);
     final commission = ride.commissionAmount;
 
     return Scaffold(
@@ -84,6 +89,8 @@ class InvoiceScreen extends StatelessWidget {
                 const Text('Fare breakdown', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
                 const SizedBox(height: 12),
                 _FareRow(label: 'Base fare', value: baseFare),
+                for (final charge in ride.locationCharges)
+                  _FareRow(label: charge.label, value: charge.amount),
                 if (commission > 0) _FareRow(label: 'Platform commission', value: -commission),
                 const Divider(height: 24),
                 _FareRow(label: 'Total fare', value: ride.fare, bold: true),

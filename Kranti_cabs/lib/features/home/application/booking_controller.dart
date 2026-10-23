@@ -534,6 +534,11 @@ class BookingController extends StateNotifier<BookingState> {
       isRoundTrip: state.tripType.isRoundTrip,
       isOutstation: state.isOutstation,
       airportFee: state.tripCategory?.isAirport == true ? state.tripCategory!.airportFee : 0,
+      // Station entry fee and state / MCD tax, priced for this vehicle's class
+      // the way the server prices them at booking.
+      locationCharges: state.tripCategory?.bookingChargesFor(vehicle.chargeClass) ?? const [],
+      parkingFrom: state.tripCategory?.parkingFromFor(vehicle.chargeClass) ?? 0,
+      parkingVaries: state.tripCategory?.parkingVariesFor(vehicle.chargeClass) ?? false,
     );
   }
 
@@ -605,7 +610,10 @@ class BookingController extends StateNotifier<BookingState> {
                       'address': s.address,
                     })
                 .toList(),
-            fare: fare.total,
+            // The trip fare alone: the server adds the airport fee, station fee
+            // and state / MCD tax itself. Sending the total charged airport
+            // riders the airport fee twice.
+            fare: fare.tripFare,
             // Sent separately so the server knows how much of `fare` is admin's
             // fee rather than the driver's trip money.
             platformFee: fare.platformFee,
