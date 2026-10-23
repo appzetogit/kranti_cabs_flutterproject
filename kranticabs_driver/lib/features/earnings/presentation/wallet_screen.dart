@@ -166,10 +166,16 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                     const Text('Wallet balance', style: TextStyle(color: Colors.white70, fontSize: 13)),
                     const SizedBox(height: 6),
                     Text(
-                      '₹${snapshot.wallet.balance.toStringAsFixed(0)}',
-                      style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w800),
+                      // "-₹120" when the driver owes commission; tinted so a
+                      // debt never reads as money in hand.
+                      snapshot.wallet.balanceText,
+                      style: TextStyle(
+                        color: snapshot.wallet.balance < 0 ? const Color(0xFFFFCDD2) : Colors.white,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                    if (snapshot.wallet.isBlocked) ...[
+                    if (snapshot.wallet.isBlocked || snapshot.wallet.owed > 0) ...[
                       const SizedBox(height: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -177,9 +183,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                           color: AppColors.error.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Text(
-                          'Balance below minimum — top up to keep accepting rides',
-                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        child: Text(
+                          _walletNotice(snapshot.wallet),
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
                         ),
                       ),
                     ],
@@ -233,6 +239,22 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
       ),
     );
   }
+}
+
+/// The line under the balance: what to top up when rides are blocked, else
+/// what is owed and how much more the driver may owe before they are.
+String _walletNotice(WalletData wallet) {
+  if (wallet.isBlocked) {
+    final topUp = wallet.topUpToGetRides;
+    return topUp > 0
+        ? 'Top up ${formatSignedRupees(topUp)} to get rides again'
+        : 'Top up to keep accepting rides';
+  }
+  final limit = wallet.creditLimit;
+  return limit > 0
+      ? 'You owe ${formatSignedRupees(wallet.owed)} commission from cash rides. '
+          'Rides continue until you owe ${formatSignedRupees(limit)} - top up to clear it.'
+      : 'You owe ${formatSignedRupees(wallet.owed)} commission from cash rides - top up to clear it.';
 }
 
 class TransactionTile extends StatelessWidget {

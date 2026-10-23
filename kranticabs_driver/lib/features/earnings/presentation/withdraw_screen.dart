@@ -72,7 +72,7 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
                 children: [
                   const Text('Available balance', style: TextStyle(color: AppColors.lightTextSecondary)),
                   Text(
-                    '₹${snapshot.wallet.balance.toStringAsFixed(0)}',
+                    snapshot.wallet.balanceText,
                     style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.primaryDark),
                   ),
                 ],

@@ -363,6 +363,21 @@ class RideNotifier extends StateNotifier<RideFlowState> {
       final code = map?['code']?.toString();
       _acceptTimeout?.cancel();
 
+      // The wallet can't take this ride (its commission would pass the credit
+      // limit, or the driver is already past it). The message says how much
+      // to top up; the offer itself cannot be taken, so it closes.
+      if (code == 'WALLET_LIMIT_FOR_RIDE' || code == 'WALLET_BELOW_LIMIT' || code == 'WALLET_PASS_REQUIRED') {
+        _stopRingtone();
+        state = state.copyWith(
+          busy: false,
+          clearIncomingRequest: true,
+          acceptError: (message != null && message.isNotEmpty)
+              ? message
+              : 'Top up your wallet to take rides',
+        );
+        return;
+      }
+
       if (code == 'RIDE_UNAVAILABLE' || code == 'RIDE_NOT_OFFERED') {
         _stopRingtone();
         state = state.copyWith(

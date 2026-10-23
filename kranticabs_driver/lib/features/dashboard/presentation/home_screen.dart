@@ -974,11 +974,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                                   ),
                                   const SizedBox(height: 1),
                                   Text(
-                                    '₹${realWalletBalance.toStringAsFixed(2)}',
-                                    style: const TextStyle(
+                                    // "-₹120.00" in red when the driver owes
+                                    // commission, never "₹-120.00".
+                                    '${realWalletBalance < 0 ? '-' : ''}₹${realWalletBalance.abs().toStringAsFixed(2)}',
+                                    style: TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.w900,
-                                      color: Color(0xFF0F172A),
+                                      color: realWalletBalance < 0 ? const Color(0xFFDC2626) : const Color(0xFF0F172A),
                                       letterSpacing: -0.5,
                                     ),
                                   ),

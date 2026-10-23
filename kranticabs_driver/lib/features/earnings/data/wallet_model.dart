@@ -44,6 +44,28 @@ class WalletData {
     minimumTransferAmount: 0,
     isBlocked: false,
   );
+
+  /// Commission from cash rides the driver still owes: the balance below zero.
+  double get owed => balance < 0 ? -balance : 0;
+
+  /// The credit limit when the admin set a negative minimum (500 for -500),
+  /// else 0: how far below zero the wallet may go and still get rides.
+  double get creditLimit => minimumBalanceForOrders < 0 ? -minimumBalanceForOrders : 0;
+
+  /// What to top up to get rides again; 0 while rides are still allowed.
+  double get topUpToGetRides {
+    final gap = minimumBalanceForOrders - balance;
+    return gap > 0 ? gap.ceilToDouble() : 0;
+  }
+
+  /// "₹571" or "-₹120" - the minus in front of the rupee sign.
+  String get balanceText => formatSignedRupees(balance);
+}
+
+/// "₹571" / "-₹120", whole rupees.
+String formatSignedRupees(double amount) {
+  final text = '₹${amount.abs().toStringAsFixed(0)}';
+  return amount < 0 ? '-$text' : text;
 }
 
 class WalletTransactionModel {
