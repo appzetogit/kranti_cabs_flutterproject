@@ -34,6 +34,10 @@ class ApiClient {
     return _unwrap(() => dio.patch(path, data: data, queryParameters: query));
   }
 
+  Future<dynamic> put(String path, {Object? data, Map<String, dynamic>? query}) {
+    return _unwrap(() => dio.put(path, data: data, queryParameters: query));
+  }
+
   Future<dynamic> delete(String path, {Object? data, Map<String, dynamic>? query}) {
     return _unwrap(() => dio.delete(path, data: data, queryParameters: query));
   }

@@ -21,6 +21,7 @@ import '../../subscription/data/subscription_model.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../application/dashboard_providers.dart';
 import 'driver_banner_strip.dart';
+import '../../destination/presentation/go_home_card.dart';
 import '../../heatmap/application/heatmap_controller.dart';
 import '../../heatmap/data/opportunity_models.dart';
 import '../../heatmap/presentation/surge_pill_icon.dart';
@@ -1174,6 +1175,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                     _SubscriptionCard(status: subscriptionStatus!),
                     const SizedBox(height: 10),
                   ],
+
+                  // 2b. GO HOME (destination mode) - hidden when the admin
+                  // has it switched off.
+                  const GoHomeCard(),
 
                   // 2c. ZONE PROMO BANNERS (hidden when none / dismissed)
                   const DriverBannerStrip(),

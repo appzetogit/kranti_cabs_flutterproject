@@ -402,6 +402,14 @@ class ProfileScreen extends ConsumerWidget {
               onTap: () => context.push('/documents'),
             ),
             _MenuTile(
+              iconBgColor: const Color(0xFF3D2E0A),
+              iconColor: AppColors.primary,
+              icon: Icons.home_outlined,
+              title: 'Home Location',
+              subtitle: 'For Go Home - rides on your way home',
+              onTap: () => context.push('/home-location'),
+            ),
+            _MenuTile(
               iconBgColor: const Color(0xFF123A2E),
               iconColor: AppColors.primary,
               icon: Icons.language_rounded,

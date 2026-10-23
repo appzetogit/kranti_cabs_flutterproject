@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/navigation/navigator_key.dart';
+import '../features/destination/presentation/home_location_screen.dart';
 import '../features/heatmap/presentation/demand_map_screen.dart';
 import '../features/auth/presentation/documents_upload_screen.dart';
 import '../features/auth/presentation/location_permission_screen.dart';
@@ -98,6 +99,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/vehicle-info', builder: (context, state) => const VehicleInfoScreen()),
       GoRoute(path: '/documents-upload', builder: (context, state) => const DocumentsUploadScreen()),
       GoRoute(path: '/payment-upi', builder: (context, state) => const PaymentUpiScreen()),
+      GoRoute(path: '/home-location', builder: (context, state) => const HomeLocationScreen()),
       GoRoute(path: '/verification-pending', builder: (context, state) => const VerificationPendingScreen()),
       GoRoute(path: '/verification-approved', builder: (context, state) => const VerificationApprovedScreen()),
       GoRoute(path: '/home', builder: (context, state) => const MainShell()),

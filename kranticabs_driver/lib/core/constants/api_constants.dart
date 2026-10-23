@@ -54,6 +54,10 @@ class ApiConstants {
 
   // Profile / session
   static const String me = '/drivers/me';
+  /// Destination mode ("Go Home"): GET state, PUT { enabled, useHome?, lat?, lng?, label? }.
+  static const String destinationMode = '/drivers/me/destination';
+  /// PUT { lat, lng, address } - the driver's saved home.
+  static const String homeLocation = '/drivers/me/home-location';
   /// Zone-targeted promo banners for the driver app (no token needed).
   static const String banners = '/drivers/banners';
   static const String deleteRequest = '/drivers/me/delete-request';
