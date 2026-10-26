@@ -6,11 +6,11 @@ import '../../../core/network/api_exception.dart';
 import '../../../core/providers/core_providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/snackbar_utils.dart';
-import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/custom_app_bar.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../application/destination_providers.dart';
 import '../data/destination_mode.dart';
+import 'home_map_picker_screen.dart';
 
 /// Where the driver's home is, for Go Home (destination mode).
 ///
@@ -26,12 +26,10 @@ class HomeLocationScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeLocationScreenState extends ConsumerState<HomeLocationScreen> {
-  final _addressController = TextEditingController();
   bool _busy = false;
 
   @override
   void dispose() {
-    _addressController.dispose();
     super.dispose();
   }
 
@@ -68,23 +66,14 @@ class _HomeLocationScreenState extends ConsumerState<HomeLocationScreen> {
     }
   }
 
-  Future<void> _useTypedAddress() async {
-    final text = _addressController.text.trim();
-    if (text.isEmpty || _busy) return;
-    FocusScope.of(context).unfocus();
-    setState(() => _busy = true);
-    try {
-      final matches = await locationFromAddress(text);
-      if (matches.isEmpty) {
-        SnackbarUtils.error("Couldn't find that address. Add the area and city.");
-        return;
-      }
-      await _confirmAndSave(matches.first.latitude, matches.first.longitude, text);
-    } catch (_) {
-      SnackbarUtils.error("Couldn't find that address. Add the area and city.");
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+  /// Search with suggestions, or drag the map under a pin.
+  Future<void> _pickOnMap() async {
+    if (_busy) return;
+    final picked = await Navigator.of(context).push<PickedPlace>(
+      MaterialPageRoute(builder: (_) => const HomeMapPickerScreen()),
+    );
+    if (picked == null || !mounted) return;
+    await _confirmAndSave(picked.lat, picked.lng, picked.address);
   }
 
   Future<void> _confirmAndSave(double lat, double lng, String address) async {
@@ -108,7 +97,6 @@ class _HomeLocationScreenState extends ConsumerState<HomeLocationScreen> {
     try {
       await ref.read(destinationModeProvider.notifier).setHome(lat: lat, lng: lng, address: address);
       SnackbarUtils.success('Home saved');
-      _addressController.clear();
     } on ApiException catch (error) {
       SnackbarUtils.error(error.message);
     }
@@ -117,7 +105,9 @@ class _HomeLocationScreenState extends ConsumerState<HomeLocationScreen> {
   @override
   Widget build(BuildContext context) {
     final info = ref.watch(destinationModeProvider).valueOrNull ?? DestinationModeInfo.none;
-    final locked = info.canChangeHomeAt != null;
+    // Only a date still ahead is a lock: the server may keep sending a past one,
+    // which used to leave both buttons disabled for good.
+    final locked = info.canChangeHomeAt != null && info.canChangeHomeAt!.isAfter(DateTime.now());
 
     return Scaffold(
       appBar: const CustomAppBar(title: 'Home Location'),
@@ -171,18 +161,12 @@ class _HomeLocationScreenState extends ConsumerState<HomeLocationScreen> {
             onPressed: locked ? null : _useCurrentLocation,
           ),
           const SizedBox(height: 20),
-          const Text('Or type your home address', style: TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 8),
-          AppTextField(
-            controller: _addressController,
-            hint: 'House / street, area, city',
-          ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           PrimaryButton(
-            label: 'Find this address',
+            label: 'Search address or pin on map',
+            icon: Icons.map_rounded,
             color: AppColors.accent,
-            loading: _busy,
-            onPressed: locked ? null : _useTypedAddress,
+            onPressed: locked ? null : _pickOnMap,
           ),
         ],
       ),

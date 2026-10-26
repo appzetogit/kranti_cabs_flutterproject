@@ -4,6 +4,9 @@ import '../data/ride_rental.dart';
 import '../data/toll_charges.dart';
 
 class RideRequest {
+  /// From this far a trip is shown as outstation / long-distance to the driver.
+  static const double longTripMeters = 50000;
+
   final String rideId;
   final String pickupAddress;
   final String dropAddress;

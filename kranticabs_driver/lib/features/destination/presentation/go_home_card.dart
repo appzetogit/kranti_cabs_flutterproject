@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,15 +25,21 @@ class GoHomeCard extends ConsumerStatefulWidget {
 class _GoHomeCardState extends ConsumerState<GoHomeCard> {
   bool _busy = false;
 
-  Future<void> _act(Future<void> Function() action) async {
+  Future<void> _act(Future<void> Function() action, {required String done}) async {
     if (_busy) return;
     setState(() => _busy = true);
     try {
       await action();
+      // Say so: a silent success looked like nothing had happened.
+      SnackbarUtils.success(done);
     } on ApiException catch (error) {
+      // Server messages are written for the driver; never swallow them.
       SnackbarUtils.error(error.message);
-    } catch (_) {
-      SnackbarUtils.error('Could not update Go Home. Please try again.');
+      // The refusal may mean our copy is stale (limit reached, feature off).
+      ref.read(destinationModeProvider.notifier).refresh();
+    } catch (error) {
+      developer.log('Go Home failed: $error', name: 'go_home');
+      SnackbarUtils.error('Could not update Go Home: $error');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -68,6 +76,14 @@ class _GoHomeCardState extends ConsumerState<GoHomeCard> {
           _busy
               ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4))
               : _action(context, info, notifier),
+          // Edit home from the card, not only from Profile. Hidden while it is running.
+          if (info.hasHome && !info.enabled)
+            IconButton(
+              tooltip: 'Edit home',
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.edit_location_alt_outlined, color: Color(0xFF64748B)),
+              onPressed: () => context.push('/home-location'),
+            ),
         ],
       ),
     );
@@ -129,7 +145,10 @@ class _GoHomeCardState extends ConsumerState<GoHomeCard> {
       // Off with no uses left today: the switch is greyed out and the text
       // under the title says why.
       onChanged: info.enabled || canTurnOn
-          ? (on) => _act(on ? notifier.goHome : notifier.turnOff)
+          ? (on) => _act(
+              on ? notifier.goHome : notifier.turnOff,
+              done: on ? 'Go Home is on - you will get rides on the way' : 'Go Home turned off',
+            )
           : null,
     );
   }

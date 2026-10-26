@@ -20,6 +20,8 @@ data class RideOfferPayload(
     val vehicleLabel: String,
     val expiresInSeconds: Int,
     val riderName: String,
+    /** `intercity` (outstation), `hourly_rental`, `parcel`... straight from the push. */
+    val serviceType: String = "",
 ) {
     fun writeTo(intent: Intent): Intent = intent.apply {
         putExtra(EXTRA_RIDE_ID, rideId)
@@ -32,6 +34,7 @@ data class RideOfferPayload(
         putExtra(EXTRA_VEHICLE_LABEL, vehicleLabel)
         putExtra(EXTRA_EXPIRES_IN, expiresInSeconds)
         putExtra(EXTRA_RIDER_NAME, riderName)
+        putExtra(EXTRA_SERVICE_TYPE, serviceType)
     }
 
     companion object {
@@ -45,6 +48,7 @@ data class RideOfferPayload(
         private const val EXTRA_VEHICLE_LABEL = "zc_vehicle_label"
         private const val EXTRA_EXPIRES_IN = "zc_expires_in"
         private const val EXTRA_RIDER_NAME = "zc_rider_name"
+        private const val EXTRA_SERVICE_TYPE = "zc_service_type"
 
         private const val DEFAULT_EXPIRY_SECONDS = 25
 
@@ -66,6 +70,7 @@ data class RideOfferPayload(
                 expiresInSeconds = data["expiresInSeconds"]?.trim()?.toIntOrNull()
                     ?.takeIf { it > 0 } ?: DEFAULT_EXPIRY_SECONDS,
                 riderName = data["riderName"].orEmpty().trim(),
+                serviceType = data["serviceType"].orEmpty().trim().lowercase(),
             )
         }
 
@@ -85,6 +90,7 @@ data class RideOfferPayload(
                 expiresInSeconds = extras?.getInt(EXTRA_EXPIRES_IN, DEFAULT_EXPIRY_SECONDS)
                     ?.takeIf { it > 0 } ?: DEFAULT_EXPIRY_SECONDS,
                 riderName = extras?.getString(EXTRA_RIDER_NAME).orEmpty(),
+                serviceType = extras?.getString(EXTRA_SERVICE_TYPE).orEmpty(),
             )
         }
     }

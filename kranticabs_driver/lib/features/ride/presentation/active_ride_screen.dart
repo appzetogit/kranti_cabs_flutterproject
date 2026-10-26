@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../application/ride_state.dart';
 import 'dart:developer' as developer;
 import 'dart:io';
 
@@ -1228,6 +1229,27 @@ class _ActiveRideScreenState extends ConsumerState<ActiveRideScreen>
                                 ),
                               ),
 
+                              if ((ride.serviceType ?? '').toLowerCase() == 'intercity' ||
+                                  ride.estimatedDistanceMeters >= RideRequest.longTripMeters) ...[
+                                const SizedBox(height: 12),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: AppColors.primary),
+                                  ),
+                                  child: const Row(
+                                    children: [
+                                      Icon(Icons.route_rounded, color: AppColors.primary, size: 18),
+                                      SizedBox(width: 8),
+                                      Text('OUTSTATION RIDE',
+                                          style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 12.5)),
+                                    ],
+                                  ),
+                                ),
+                              ],
                               if (ride.rental != null) ...[
                                 const SizedBox(height: 12),
                                 RentalUsageCard(

@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../application/ride_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -122,16 +123,20 @@ class _RideRequestScreenState extends ConsumerState<RideRequestScreen> {
     final isParcel =
         request.parcel.isNotEmpty || request.serviceType == 'parcel';
     final rental = request.rental;
+    // A rider can book a far-away drop as a normal ride (the server only files
+    // it as outstation when it crosses a zone), so a long distance is flagged
+    // regardless of how it was booked.
+    final isLongTrip = request.isOutstation || request.estimatedDistanceMeters >= RideRequest.longTripMeters;
     final titleText = rental != null
         ? 'New hourly rental request'
         : isParcel
         ? 'New Parcel Request'
-        : (request.isOutstation ? 'Outstation Request' : 'New Ride Request');
+        : (isLongTrip ? 'Outstation / Long Trip' : 'New Ride Request');
     final badgeText = rental != null
         ? 'RENTAL'
         : isParcel
         ? 'PARCEL'
-        : (request.isOutstation ? 'OUTSTATION' : 'PASSENGER');
+        : (isLongTrip ? 'OUTSTATION' : 'PASSENGER');
 
     return PopScope(
       canPop: false,

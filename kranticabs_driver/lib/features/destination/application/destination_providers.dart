@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../../../core/providers/core_providers.dart';
+import '../../auth/application/auth_providers.dart';
 import '../data/destination_mode.dart';
 import '../data/destination_repository.dart';
 
@@ -74,5 +75,9 @@ class DestinationModeNotifier extends StateNotifier<AsyncValue<DestinationModeIn
 
 final destinationModeProvider =
     StateNotifierProvider<DestinationModeNotifier, AsyncValue<DestinationModeInfo>>((ref) {
+  // Rebuilt for each signed-in driver. Without this the first driver's saved
+  // home and "move again from <date>" lock stayed on screen after logging in
+  // as someone new, because nothing else here changes at login.
+  ref.watch(authProvider.select((a) => a.driver?.id));
   return DestinationModeNotifier(ref.watch(destinationRepositoryProvider));
 });

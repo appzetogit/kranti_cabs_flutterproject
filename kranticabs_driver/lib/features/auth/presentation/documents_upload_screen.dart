@@ -20,17 +20,23 @@ IconData _iconForDocument(String name, String key) {
   final lower = (name + key).toLowerCase();
   if (lower.contains('profile') || lower.contains('photo')) {
     return Icons.account_circle_outlined;
-  } else if (lower.contains('aadhaar') || lower.contains('id') || lower.contains('pan')) {
+  } else if (lower.contains('aadhaar') ||
+      lower.contains('id') ||
+      lower.contains('pan')) {
     return Icons.badge_outlined;
   } else if (lower.contains('license') || lower.contains('dl')) {
     return Icons.credit_card_outlined;
-  } else if (lower.contains('rc') || lower.contains('registration') || lower.contains('vehicle')) {
+  } else if (lower.contains('rc') ||
+      lower.contains('registration') ||
+      lower.contains('vehicle')) {
     return Icons.directions_car_outlined;
   } else if (lower.contains('insurance')) {
     return Icons.security_outlined;
   } else if (lower.contains('pollution') || lower.contains('puc')) {
     return Icons.verified_user_outlined;
-  } else if (lower.contains('bank') || lower.contains('cheque') || lower.contains('passbook')) {
+  } else if (lower.contains('bank') ||
+      lower.contains('cheque') ||
+      lower.contains('passbook')) {
     return Icons.account_balance_outlined;
   }
   return Icons.description_outlined;
@@ -40,7 +46,8 @@ class DocumentsUploadScreen extends ConsumerStatefulWidget {
   const DocumentsUploadScreen({super.key});
 
   @override
-  ConsumerState<DocumentsUploadScreen> createState() => _DocumentsUploadScreenState();
+  ConsumerState<DocumentsUploadScreen> createState() =>
+      _DocumentsUploadScreenState();
 }
 
 class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
@@ -95,7 +102,9 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
 
   Future<void> _loadTemplates() async {
     try {
-      final templates = await ref.read(signupProvider.notifier).getDocumentTemplates();
+      final templates = await ref
+          .read(signupProvider.notifier)
+          .getDocumentTemplates();
       if (!mounted) return;
       setState(() {
         _templates = templates;
@@ -144,9 +153,18 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
                     color: Color(0xFF11191D),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
+                  child: const Icon(
+                    Icons.camera_alt_rounded,
+                    color: AppColors.primary,
+                  ),
                 ),
-                title: const Text('Take Photo (Camera)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                title: const Text(
+                  'Take Photo (Camera)',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickImage(key, ImageSource.camera);
@@ -160,9 +178,18 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
                     color: Color(0xFF11191D),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.photo_library_rounded, color: AppColors.primary),
+                  child: const Icon(
+                    Icons.photo_library_rounded,
+                    color: AppColors.primary,
+                  ),
                 ),
-                title: const Text('Choose from Gallery', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                title: const Text(
+                  'Choose from Gallery',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickImage(key, ImageSource.gallery);
@@ -178,10 +205,16 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
 
   Future<void> _pickImage(String key, ImageSource source) async {
     final picker = ImagePicker();
-    final prefs = source == ImageSource.camera ? await SharedPreferences.getInstance() : null;
+    final prefs = source == ImageSource.camera
+        ? await SharedPreferences.getInstance()
+        : null;
     if (prefs != null) await prefs.setString(_pendingCameraPickPrefsKey, key);
 
-    final picked = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1280);
+    final picked = await picker.pickImage(
+      source: source,
+      imageQuality: 80,
+      maxWidth: 1280,
+    );
 
     if (prefs != null) await prefs.remove(_pendingCameraPickPrefsKey);
     if (picked == null) return;
@@ -191,7 +224,9 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
   Future<void> _applyPickedFile(String key, File file) async {
     final bytes = await file.readAsBytes();
     final dataUrl = 'data:image/jpeg;base64,${base64Encode(bytes)}';
-    ref.read(signupProvider.notifier).setDocument(key, dataUrl, path: file.path);
+    ref
+        .read(signupProvider.notifier)
+        .setDocument(key, dataUrl, path: file.path);
     if (!mounted) return;
     setState(() {
       _files[key] = file;
@@ -245,7 +280,10 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
     if (_selectedIndex != null) {
       final template = _templates[_selectedIndex!];
       final file = _files[template.key];
-      final identifyController = _identifyControllers.putIfAbsent(template.key, () => TextEditingController());
+      final identifyController = _identifyControllers.putIfAbsent(
+        template.key,
+        () => TextEditingController(),
+      );
 
       return PopScope(
         canPop: false,
@@ -263,113 +301,163 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
             child: RegistrationProgressBar(currentStep: 3),
           ),
           body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Text(
-                      'Step 3 of 3',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
+            // Scrolls when the keyboard is up (it covered the number field and
+            // overflowed the column); the button stays at the bottom otherwise.
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                            child: Text(
+                              'Step 3 of 3',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
 
-                  // Image Capture Container Box (1:1 with Image 1 reference)
-                  GestureDetector(
-                    onTap: () => _showImageSourceDialog(template.key),
-                    child: Container(
-                      height: 200,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF222222),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: file != null ? AppColors.primary : const Color(0xFFF5B400).withValues(alpha: 0.5),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: file != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(18),
-                              child: Stack(
-                                children: [
-                                  Image.file(file, fit: BoxFit.cover, width: double.infinity, height: double.infinity),
-                                  Positioned(
-                                    right: 12,
-                                    bottom: 12,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black,
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: const Row(
+                          // Image Capture Container Box (1:1 with Image 1 reference)
+                          GestureDetector(
+                            onTap: () => _showImageSourceDialog(template.key),
+                            child: Container(
+                              height: 200,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF222222),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: file != null
+                                      ? AppColors.primary
+                                      : const Color(
+                                          0xFFF5B400,
+                                        ).withValues(alpha: 0.5),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: file != null
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(18),
+                                      child: Stack(
                                         children: [
-                                          Icon(Icons.refresh_rounded, color: Colors.white, size: 14),
-                                          SizedBox(width: 4),
-                                          Text('Change', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                          Image.file(
+                                            file,
+                                            fit: BoxFit.cover,
+                                            width: double.infinity,
+                                            height: double.infinity,
+                                          ),
+                                          Positioned(
+                                            right: 12,
+                                            bottom: 12,
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 6,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.black,
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              child: const Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.refresh_rounded,
+                                                    color: Colors.white,
+                                                    size: 14,
+                                                  ),
+                                                  SizedBox(width: 4),
+                                                  Text(
+                                                    'Change',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
                                         ],
                                       ),
+                                    )
+                                  : Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: const [
+                                        Icon(
+                                          Icons.camera_alt_outlined,
+                                          size: 44,
+                                          color: AppColors.primary,
+                                        ),
+                                        SizedBox(height: 10),
+                                        Text(
+                                          'Tap to capture',
+                                          style: TextStyle(
+                                            color: AppColors.primary,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Icon(Icons.camera_alt_outlined, size: 44, color: AppColors.primary),
-                                SizedBox(height: 10),
-                                Text(
-                                  'Tap to capture',
-                                  style: TextStyle(
-                                    color: AppColors.primary,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
                             ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Identify Document Number Field (e.g. PAN Card Number)
+                          if (template.hasIdentifyNumber) ...[
+                            AppTextField(
+                              controller: identifyController,
+                              label: '${template.name} Number',
+                              hint: 'Enter document number',
+                            ),
+                            const SizedBox(height: 24),
+                          ],
+
+                          const Spacer(),
+
+                          // Save / Next Button
+                          PrimaryButton(
+                            label: _selectedIndex! < _templates.length - 1
+                                ? 'Next'
+                                : 'Done',
+                            onPressed: () {
+                              if (!_files.containsKey(template.key)) {
+                                SnackbarUtils.error(
+                                  'Please upload ${template.name}',
+                                );
+                                return;
+                              }
+                              if (_selectedIndex! < _templates.length - 1) {
+                                setState(
+                                  () => _selectedIndex = _selectedIndex! + 1,
+                                );
+                              } else {
+                                setState(() => _selectedIndex = null);
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 24),
-
-                  // Identify Document Number Field (e.g. PAN Card Number)
-                  if (template.hasIdentifyNumber) ...[
-                    AppTextField(
-                      controller: identifyController,
-                      label: '${template.name} Number',
-                      hint: 'Enter document number',
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-
-                  const Spacer(),
-
-                  // Save / Next Button
-                  PrimaryButton(
-                    label: _selectedIndex! < _templates.length - 1 ? 'Next' : 'Done',
-                    onPressed: () {
-                      if (!_files.containsKey(template.key)) {
-                        SnackbarUtils.error('Please upload ${template.name}');
-                        return;
-                      }
-                      if (_selectedIndex! < _templates.length - 1) {
-                        setState(() => _selectedIndex = _selectedIndex! + 1);
-                      } else {
-                        setState(() => _selectedIndex = null);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                ],
+                ),
               ),
             ),
           ),
@@ -405,9 +493,13 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
             // Document List
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 itemCount: _templates.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final template = _templates[index];
                   final isUploaded = _files.containsKey(template.key);
@@ -417,11 +509,16 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
                       color: const Color(0xFF222222),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isUploaded ? AppColors.primary.withValues(alpha: 0.5) : const Color(0xFF2E2E2E),
+                        color: isUploaded
+                            ? AppColors.primary.withValues(alpha: 0.5)
+                            : const Color(0xFF2E2E2E),
                       ),
                     ),
                     child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
                       onTap: () => setState(() => _selectedIndex = index),
                       leading: Container(
                         padding: const EdgeInsets.all(10),
@@ -431,7 +528,9 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
                         ),
                         child: Icon(
                           _iconForDocument(template.name, template.key),
-                          color: isUploaded ? AppColors.primary : const Color(0xFF94A3B8),
+                          color: isUploaded
+                              ? AppColors.primary
+                              : const Color(0xFF94A3B8),
                           size: 22,
                         ),
                       ),
@@ -444,10 +543,14 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
                         ),
                       ),
                       subtitle: Text(
-                        isUploaded ? 'Document Uploaded' : (template.isRequired ? 'Required' : 'Optional'),
+                        isUploaded
+                            ? 'Document Uploaded'
+                            : (template.isRequired ? 'Required' : 'Optional'),
                         style: TextStyle(
                           fontSize: 12,
-                          color: isUploaded ? AppColors.primary : const Color(0xFF94A3B8),
+                          color: isUploaded
+                              ? AppColors.primary
+                              : const Color(0xFF94A3B8),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -469,7 +572,9 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
                               decoration: BoxDecoration(
                                 color: const Color(0xFF11191D),
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: const Color(0xFF2E2E2E)),
+                                border: Border.all(
+                                  color: const Color(0xFF2E2E2E),
+                                ),
                               ),
                               child: const Icon(
                                 Icons.camera_alt_outlined,

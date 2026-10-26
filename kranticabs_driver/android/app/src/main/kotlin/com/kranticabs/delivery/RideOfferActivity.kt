@@ -88,6 +88,18 @@ class RideOfferActivity : Activity() {
         // Whatever the admin named this vehicle type, straight from the payload.
         findViewById<TextView>(R.id.offer_vehicle_label).text =
             offer.vehicleLabel.ifEmpty { offer.vehicleIconType.ifEmpty { "Ride" } }
+        findViewById<TextView>(R.id.offer_service_tag).apply {
+            // A long-distance trip has to be obvious before the driver accepts.
+            val label = when (offer.serviceType) {
+                "intercity" -> "OUTSTATION"
+                "hourly_rental" -> "HOURLY RENTAL"
+                "parcel" -> "PARCEL"
+                // Booked as a plain ride but far away: still an outstation-length trip.
+                else -> if ((offer.tripDistanceKm.toDoubleOrNull() ?: 0.0) >= 50.0) "OUTSTATION / LONG TRIP" else ""
+            }
+            text = label
+            visibility = if (label.isEmpty()) android.view.View.GONE else android.view.View.VISIBLE
+        }
         findViewById<TextView>(R.id.offer_per_km).apply {
             val fare = offer.fare.toDoubleOrNull()
             val km = offer.tripDistanceKm.toDoubleOrNull()
