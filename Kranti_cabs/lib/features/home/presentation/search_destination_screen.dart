@@ -118,6 +118,15 @@ class _SearchDestinationScreenState
   /// The rider's chosen return date/time for a round-trip outstation ride.
   DateTime? _returnAt;
 
+  /// When an outstation trip leaves; null is "now". Booked as the ride's
+  /// `scheduledAt`, so a later trip reaches drivers as a scheduled ride (their
+  /// Scheduled Rides list) instead of a ride-now request.
+  DateTime? _leaveAt;
+
+  /// Earliest pickup a rider can schedule, as on Ola / Uber. The server takes
+  /// anything 15 minutes out; this leaves room for the time spent booking.
+  static const _minScheduleLead = Duration(minutes: 30);
+
   void _selectTripType(TripType next) {
     setState(() {
       _tripType = next;
@@ -127,25 +136,135 @@ class _SearchDestinationScreenState
     ref.read(bookingControllerProvider.notifier).setTripType(next, byRider: true);
   }
 
-  /// Date + time picker for the return leg of a round-trip outstation ride.
-  Future<void> _pickReturnDateTime() async {
-    final now = DateTime.now();
-    final initial = _returnAt ?? now.add(const Duration(days: 1));
+  Future<DateTime?> _pickDateTime({
+    required DateTime initial,
+    required DateTime first,
+    required DateTime last,
+  }) async {
     final date = await showDatePicker(
       context: context,
-      initialDate: initial,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 60)),
+      initialDate: initial.isBefore(first) ? first : initial,
+      firstDate: DateTime(first.year, first.month, first.day),
+      lastDate: last,
     );
-    if (date == null || !mounted) return;
+    if (date == null || !mounted) return null;
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(initial),
     );
-    if (time == null || !mounted) return;
-    final picked = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    if (time == null || !mounted) return null;
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  }
+
+  /// Date + time the outstation trip leaves. At least [_minScheduleLead] out,
+  /// up to 30 days.
+  Future<void> _pickLeaveDateTime() async {
+    final now = DateTime.now();
+    final earliest = now.add(_minScheduleLead);
+    final picked = await _pickDateTime(
+      initial: _leaveAt ?? earliest.add(const Duration(minutes: 30)),
+      first: earliest,
+      last: now.add(const Duration(days: 30)),
+    );
+    if (picked == null || !mounted) return;
+    if (picked.isBefore(DateTime.now().add(_minScheduleLead))) {
+      SnackbarUtils.error(context, 'Pick a time at least 30 minutes from now, or leave now');
+      return;
+    }
+    setState(() {
+      _leaveAt = picked;
+      // A return before the new departure no longer makes sense.
+      if (_returnAt != null && !_returnAt!.isAfter(picked)) _returnAt = null;
+    });
+    final booking = ref.read(bookingControllerProvider.notifier);
+    booking.setScheduledAt(picked);
+    if (_returnAt == null) booking.setReturnAt(null);
+  }
+
+  void _leaveNow() {
+    setState(() => _leaveAt = null);
+    ref.read(bookingControllerProvider.notifier).setScheduledAt(null);
+  }
+
+  /// Date + time picker for the return leg of a round-trip outstation ride:
+  /// after the departure.
+  Future<void> _pickReturnDateTime() async {
+    final start = _leaveAt ?? DateTime.now();
+    final picked = await _pickDateTime(
+      initial: _returnAt ?? start.add(const Duration(days: 1)),
+      first: start,
+      last: start.add(const Duration(days: 30)),
+    );
+    if (picked == null || !mounted) return;
+    if (!picked.isAfter(start.add(const Duration(hours: 1)))) {
+      SnackbarUtils.error(context, 'The return has to be at least an hour after you leave');
+      return;
+    }
     setState(() => _returnAt = picked);
     ref.read(bookingControllerProvider.notifier).setReturnAt(picked);
+  }
+
+  /// A tappable "label / value" row for the outstation departure and return.
+  /// [onClear] adds an X that resets it (the departure back to "Now").
+  Widget _dateTimeRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required bool highlighted,
+    required VoidCallback onTap,
+    VoidCallback? onClear,
+    required Color cardBgColor,
+    required Color borderColor,
+    required Color accent,
+    required Color textSecondary,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: highlighted ? const Color(0xFF044B47) : cardBgColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: highlighted ? accent : borderColor, width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: accent),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: textSecondary),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      value,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: highlighted ? Colors.white : Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (onClear != null)
+                GestureDetector(
+                  onTap: onClear,
+                  child: Icon(Icons.close_rounded, size: 20, color: textSecondary),
+                )
+              else
+                Icon(Icons.chevron_right_rounded, size: 20, color: textSecondary),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   String _formatReturnDateTime(DateTime dt) {
@@ -288,8 +407,17 @@ class _SearchDestinationScreenState
       // while the fare charged every kilometre twice.
       final initialTripType =
           widget.isOutstation ? TripType.roundTrip : TripType.oneWay;
-      setState(() => _tripType = initialTripType);
+      setState(() {
+        _tripType = initialTripType;
+        _leaveAt = null;
+        _returnAt = null;
+      });
       booking.setTripType(initialTripType);
+      // A fresh search starts as a ride now: a time or return picked on an
+      // earlier booking must not carry over (the controller outlives this
+      // screen).
+      booking.setScheduledAt(null);
+      booking.setReturnAt(null);
     });
   }
 
@@ -1812,55 +1940,39 @@ class _SearchDestinationScreenState
                             ),
                           ),
 
+                          // When the trip leaves: now, or a time - which books it
+                          // as a scheduled ride.
+                          if (widget.isOutstation) ...[
+                            const SizedBox(height: 10),
+                            _dateTimeRow(
+                              icon: Icons.schedule_rounded,
+                              label: 'Leave on',
+                              value: _leaveAt == null ? 'Now' : _formatReturnDateTime(_leaveAt!),
+                              highlighted: _leaveAt != null,
+                              onTap: _pickLeaveDateTime,
+                              onClear: _leaveAt == null ? null : _leaveNow,
+                              cardBgColor: cardBgColor,
+                              borderColor: borderColor,
+                              accent: tealColor,
+                              textSecondary: textSecondary,
+                            ),
+                          ],
+
                           // Return date/time — only for a round-trip outstation ride
                           if (_tripType == TripType.roundTrip && widget.isOutstation) ...[
                             const SizedBox(height: 10),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: GestureDetector(
-                                onTap: _pickReturnDateTime,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: cardBgColor,
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(color: borderColor, width: 1.5),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.event_repeat_rounded, size: 18, color: tealColor),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Return date & time',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                                color: textSecondary,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              _returnAt == null
-                                                  ? 'Select return date & time'
-                                                  : _formatReturnDateTime(_returnAt!),
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w700,
-                                                color: _returnAt == null ? Colors.white70 : Colors.white,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const Icon(Icons.chevron_right_rounded, size: 20, color: textSecondary),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                            _dateTimeRow(
+                              icon: Icons.event_repeat_rounded,
+                              label: 'Return date & time',
+                              value: _returnAt == null
+                                  ? 'Select return date & time'
+                                  : _formatReturnDateTime(_returnAt!),
+                              highlighted: _returnAt != null,
+                              onTap: _pickReturnDateTime,
+                              cardBgColor: cardBgColor,
+                              borderColor: borderColor,
+                              accent: tealColor,
+                              textSecondary: textSecondary,
                             ),
                           ],
 

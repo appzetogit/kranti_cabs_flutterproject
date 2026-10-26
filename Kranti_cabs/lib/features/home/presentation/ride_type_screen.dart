@@ -592,9 +592,11 @@ class _RideTypeScreenState extends ConsumerState<RideTypeScreen> {
                                           child: ScheduleRideSheet(initial: booking.scheduledAt),
                                         ),
                                       );
-                                      if (selected != null || booking.scheduledAt != null) {
-                                        controller.setScheduledAt(selected);
-                                      }
+                                      // Dismissed: keep whatever was set.
+                                      if (selected == null) return;
+                                      controller.setScheduledAt(
+                                        identical(selected, ScheduleRideSheet.rideNow) ? null : selected,
+                                      );
                                     },
                                     borderRadius: BorderRadius.circular(14),
                                     child: Container(
@@ -892,9 +894,13 @@ class _RideTypeScreenState extends ConsumerState<RideTypeScreen> {
                                       }
 
                                       if (wasScheduled) {
+                                        // A reservation has no search to watch: left
+                                        // running, the search polled and could show
+                                        // "no driver found" for a ride days away.
+                                        controller.reset();
                                         SnackbarUtils.success(
                                           context,
-                                          'Ride scheduled. You can track it under Scheduled.',
+                                          'Ride scheduled. We will tell you when a driver is assigned.',
                                         );
                                         context.go('/rides');
                                         return;

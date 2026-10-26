@@ -81,7 +81,7 @@ class RideRepository {
       // them as intercity.
       'transport_type': 'taxi',
       if (intercity != null && intercity.isNotEmpty) 'intercity': intercity,
-      if (scheduledAt != null) 'scheduledAt': scheduledAt.toIso8601String(),
+      if (scheduledAt != null) 'scheduledAt': scheduledAt.toUtc().toIso8601String(),
       if (bookingMode != null && bookingMode.isNotEmpty) 'bookingMode': bookingMode,
       if (userMaxBidFare != null && userMaxBidFare > 0) 'userMaxBidFare': userMaxBidFare,
     });

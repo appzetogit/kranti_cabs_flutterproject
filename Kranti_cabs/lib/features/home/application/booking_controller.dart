@@ -266,6 +266,8 @@ class BookingController extends StateNotifier<BookingState> {
     } else {
       state = state.copyWith(scheduledAt: time);
     }
+    // A round trip is billed per day from the departure.
+    _repriceSelectedVehicle();
   }
 
   void goToStep(BookingStep step) {
@@ -459,6 +461,8 @@ class BookingController extends StateNotifier<BookingState> {
     } else {
       state = state.copyWith(returnAt: time);
     }
+    // More days, more driver allowance and minimum km.
+    _repriceSelectedVehicle();
   }
 
   /// Marks this booking as an intercity trip, which switches to the outstation
@@ -673,10 +677,10 @@ class BookingController extends StateNotifier<BookingState> {
               'distance': ((state.distanceMeters ?? 0) / 1000),
               'vehicleName': vehicle.name,
               if (state.scheduledAt != null)
-                'travelDate': state.scheduledAt!.toIso8601String(),
+                'travelDate': state.scheduledAt!.toUtc().toIso8601String(),
               // The return leg's date/time, only on a round trip.
               if (state.tripType.isRoundTrip && state.returnAt != null)
-                'returnDate': state.returnAt!.toIso8601String(),
+                'returnDate': state.returnAt!.toUtc().toIso8601String(),
             },
           );
       search.attachRide(ride);
@@ -693,6 +697,14 @@ class BookingController extends StateNotifier<BookingState> {
         search.reset();
         state = state.copyWith(isSubmitting: false, error: e.message, step: stepBefore);
         return BookingAttempt.kycRequired;
+      }
+      // The pickup time was refused (too soon / too far ahead): nothing was
+      // booked and no driver was looked for, so say why instead of showing
+      // "no driver found".
+      if (e is ApiException && (e.code == 'SCHEDULE_TOO_SOON' || e.code == 'SCHEDULE_TOO_FAR')) {
+        search.reset();
+        state = state.copyWith(isSubmitting: false, error: e.message, step: stepBefore);
+        return BookingAttempt.notReady;
       }
       search.failCreate(e.toString());
       state = state.copyWith(

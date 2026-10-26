@@ -170,6 +170,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final type = message.data['type'];
     if (type == 'ride_request') {
       GoRouter.of(context).push('/ride-request');
+    } else if (type == 'scheduled_ride_available') {
+      // A ride booked for later nearby: the list is where it can be taken.
+      GoRouter.of(context).push('/scheduled-rides');
     } else {
       GoRouter.of(context).push('/home');
     }

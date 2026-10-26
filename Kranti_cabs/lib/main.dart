@@ -84,6 +84,14 @@ class _AppBootstrapperState extends ConsumerState<_AppBootstrapper> {
           return;
         }
 
+        // A ride booked for later (e.g. "Driver assigned") is not live yet:
+        // open its details, not tracking.
+        final scheduledRideId = message.data['scheduledRideId'];
+        if (scheduledRideId != null && scheduledRideId.toString().isNotEmpty) {
+          GoRouter.of(context).push('/ride/detail/$scheduledRideId');
+          return;
+        }
+
         final rideId = message.data['rideId'];
         if (rideId != null && rideId.toString().isNotEmpty) {
           GoRouter.of(context).push('/ride/tracking/$rideId');
