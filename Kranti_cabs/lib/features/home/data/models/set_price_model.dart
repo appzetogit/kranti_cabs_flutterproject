@@ -18,6 +18,12 @@ class SetPriceModel {
   final double outstationPricePerDistance;
   final double outstationTimePrice;
 
+  /// Round trip: per km (0 = use [outstationPricePerDistance]), minimum km
+  /// billed per day, and driver allowance per day.
+  final double outstationRoundTripPricePerDistance;
+  final double outstationMinKmPerDay;
+  final double outstationDriverAllowancePerDay;
+
   /// The per-ride platform fee - the client's admin charges (platform support,
   /// third party and GST) - charged on top of the trip. A fixed sum unless
   /// [platformFeeIsPercentage].
@@ -40,6 +46,9 @@ class SetPriceModel {
     this.outstationBaseDistanceKm = 0,
     this.outstationPricePerDistance = 0,
     this.outstationTimePrice = 0,
+    this.outstationRoundTripPricePerDistance = 0,
+    this.outstationMinKmPerDay = 0,
+    this.outstationDriverAllowancePerDay = 0,
     this.platformFee = 0,
     this.platformFeeIsPercentage = false,
   });
@@ -88,6 +97,9 @@ class SetPriceModel {
       outstationBaseDistanceKm: asDouble(json['outstation_base_distance']),
       outstationPricePerDistance: asDouble(json['outstation_price_per_distance']),
       outstationTimePrice: asDouble(json['outstation_time_price']),
+      outstationRoundTripPricePerDistance: asDouble(json['outstation_round_trip_price_per_distance']),
+      outstationMinKmPerDay: asDouble(json['outstation_min_km_per_day']),
+      outstationDriverAllowancePerDay: asDouble(json['outstation_driver_allowance_per_day']),
       platformFee: asDouble(json['rider_platform_fee']),
       platformFeeIsPercentage: json['rider_platform_fee_type'] == 'percentage',
     );

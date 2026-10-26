@@ -7,6 +7,11 @@ class FareBreakdown {
   final double timeFare;
   final double serviceTax;
 
+  /// Outstation round trip only: driver allowance for [tripDays] days, in
+  /// [total]; and the days billed (1 otherwise).
+  final double driverAllowance;
+  final int tripDays;
+
   /// The per-ride platform fee, already included in [total].
   final double platformFee;
 
@@ -28,6 +33,8 @@ class FareBreakdown {
     required this.distanceFare,
     required this.timeFare,
     required this.serviceTax,
+    this.driverAllowance = 0,
+    this.tripDays = 1,
     this.platformFee = 0,
     this.airportFee = 0,
     this.locationCharges = const [],
@@ -66,6 +73,7 @@ class FareCalculator {
     List<LocationChargeLine> locationCharges = const [],
     double parkingFrom = 0,
     bool parkingVaries = false,
+    int tripDays = 1,
   }) {
     final locationTotal = locationCharges.fold<double>(0, (sum, line) => sum + line.amount);
     final useOutstation = isOutstation && pricing.supportsOutstation;
@@ -77,17 +85,34 @@ class FareCalculator {
         useOutstation ? pricing.outstationPricePerDistance : pricing.pricePerDistance;
     final perMinute = useOutstation ? pricing.outstationTimePrice : pricing.timePrice;
 
-    // The return leg retraces the same route, so it costs the same again.
-    final legMultiplier = isRoundTrip ? 2 : 1;
-    final distanceKm = (distanceMeters / 1000) * legMultiplier;
-    final durationMinutes = (durationSeconds / 60) * legMultiplier;
-
-    final chargeableKm = (distanceKm - baseDistanceKm).clamp(0, double.infinity);
+    double distanceFare;
+    double timeFare;
+    double driverAllowance = 0;
+    if (useOutstation && isRoundTrip) {
+      // Outstation round trip - the server's formula (outstationFareService):
+      // per km x the larger of (km both ways, minimum km/day x days) plus the
+      // driver allowance per day; no per-minute charge.
+      final days = tripDays < 1 ? 1 : tripDays;
+      final ratePerKm = pricing.outstationRoundTripPricePerDistance > 0
+          ? pricing.outstationRoundTripPricePerDistance
+          : perKm;
+      final bothWaysKm = (distanceMeters / 1000) * 2;
+      final minimumKm = pricing.outstationMinKmPerDay * days;
+      distanceFare = (bothWaysKm > minimumKm ? bothWaysKm : minimumKm) * ratePerKm;
+      timeFare = 0;
+      driverAllowance = pricing.outstationDriverAllowancePerDay * days;
+    } else {
+      // The return leg retraces the same route, so it costs the same again.
+      final legMultiplier = isRoundTrip ? 2 : 1;
+      final distanceKm = (distanceMeters / 1000) * legMultiplier;
+      final durationMinutes = (durationSeconds / 60) * legMultiplier;
+      final chargeableKm = (distanceKm - baseDistanceKm).clamp(0, double.infinity);
+      distanceFare = chargeableKm * perKm;
+      timeFare = durationMinutes * perMinute;
+    }
 
     final baseFare = basePrice;
-    final distanceFare = chargeableKm * perKm;
-    final timeFare = durationMinutes * perMinute;
-    final subtotal = baseFare + distanceFare + timeFare;
+    final subtotal = baseFare + distanceFare + timeFare + driverAllowance;
     final serviceTax = subtotal * (pricing.serviceTaxPercent / 100);
     final total = (subtotal + serviceTax).clamp(basePrice, double.infinity);
 
@@ -103,6 +128,8 @@ class FareCalculator {
       baseFare: baseFare,
       distanceFare: distanceFare,
       timeFare: timeFare,
+      driverAllowance: driverAllowance,
+      tripDays: useOutstation && isRoundTrip ? (tripDays < 1 ? 1 : tripDays) : 1,
       serviceTax: serviceTax,
       platformFee: platformFee,
       airportFee: airportFee,

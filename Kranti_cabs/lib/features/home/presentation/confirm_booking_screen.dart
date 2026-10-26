@@ -253,6 +253,14 @@ class ConfirmBookingScreen extends ConsumerWidget {
                             const SizedBox(height: 8),
                             _FareRow(label: line.label, value: _rupees(line.amount)),
                           ],
+                        // Outstation round trip: the driver's daily allowance.
+                        if (fare != null && fare.driverAllowance > 0) ...[
+                          const SizedBox(height: 8),
+                          _FareRow(
+                            label: 'Driver allowance (${fare.tripDays} ${fare.tripDays == 1 ? 'day' : 'days'})',
+                            value: _rupees(fare.driverAllowance),
+                          ),
+                        ],
                         if (fare != null && fare.platformFee > 0) ...[
                           const SizedBox(height: 8),
                           _FareRow(label: 'Platform fee (incl. GST)', value: _rupees(fare.platformFee)),

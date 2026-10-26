@@ -369,9 +369,13 @@ class BookingController extends StateNotifier<BookingState> {
   void _applyTrip(TripCategory trip) {
     state = state.copyWith(tripCategory: trip, checkingTrip: false);
     if (trip.isUnserviceable) return;
-    if (trip.moduleId != null) setModule(trip.moduleId);
+    // The rider tapped Outstation: keep it, even when the server calls the
+    // trip "city". Overriding that choice used to book every outstation trip
+    // as a city ride, so drivers never saw an outstation request.
+    final keepOutstation = _riderChoseOutstation && !trip.isOutstation;
+    if (trip.moduleId != null && !keepOutstation) setModule(trip.moduleId);
     final wasOutstation = state.isOutstation;
-    setOutstation(trip.isOutstation);
+    setOutstation(trip.isOutstation || _riderChoseOutstation);
     // Match what the Outstation tile does: an intercity trip starts as a
     // round trip, and leaving outstation goes back to one way. Without this
     // an automatically detected outstation trip was priced one way and
@@ -487,6 +491,16 @@ class BookingController extends StateNotifier<BookingState> {
     }
   }
 
+  /// Set when the rider picks the Outstation tile, so the server's own
+  /// classification never switches it back to a city ride.
+  bool _riderChoseOutstation = false;
+
+  /// The Outstation (or City) tile's choice, made by the rider.
+  void chooseOutstation(bool isOutstation) {
+    _riderChoseOutstation = isOutstation;
+    setOutstation(isOutstation);
+  }
+
   void setOutstation(bool isOutstation) {
     if (state.isOutstation == isOutstation) return;
     state = state.copyWith(isOutstation: isOutstation);
@@ -539,7 +553,21 @@ class BookingController extends StateNotifier<BookingState> {
       locationCharges: state.tripCategory?.bookingChargesFor(vehicle.chargeClass) ?? const [],
       parkingFrom: state.tripCategory?.parkingFromFor(vehicle.chargeClass) ?? 0,
       parkingVaries: state.tripCategory?.parkingVariesFor(vehicle.chargeClass) ?? false,
+      tripDays: outstationTripDays,
     );
+  }
+
+  /// Days an outstation round trip is billed for: calendar days from the
+  /// travel date (or today) to the return date, counted inclusively - a
+  /// same-day return is 1 day. The server counts the same way.
+  int get outstationTripDays {
+    final start = state.scheduledAt ?? DateTime.now();
+    final end = state.returnAt;
+    if (end == null) return 1;
+    final startDay = DateTime(start.year, start.month, start.day);
+    final endDay = DateTime(end.year, end.month, end.day);
+    final days = endDay.difference(startDay).inDays + 1;
+    return days < 1 ? 1 : days;
   }
 
   /// Turns naming-your-own-price on or off.

@@ -279,7 +279,9 @@ class _SearchDestinationScreenState
           widget.moduleId ?? await _resolveModuleIdFromTitle(widget.title);
       if (!mounted) return;
       booking.setModule(resolvedModuleId);
-      booking.setOutstation(widget.isOutstation);
+      // The tile's choice: an Outstation tile stays outstation even when the
+      // server classifies the trip as city.
+      booking.chooseOutstation(widget.isOutstation);
       // Set on every entry, not only for outstation. The booking controller
       // outlives this screen, so a Round Trip picked on an earlier search
       // stayed in force on the next city ride - the toggle showed One Way

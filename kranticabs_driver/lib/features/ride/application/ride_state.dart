@@ -129,6 +129,12 @@ class RideRequest {
     final isRoundTrip =
         (intercity['tripType'] ?? '').toString().toLowerCase() == 'round_trip';
     final returnDateLabel = _formatReturnDate(intercity['returnDate']?.toString());
+    // Days the server billed a round trip for (travel date to return date).
+    final pricing = intercity['pricing'] is Map
+        ? Map<String, dynamic>.from(intercity['pricing'] as Map)
+        : const <String, dynamic>{};
+    final tripDays = int.tryParse('${pricing['days'] ?? ''}') ?? 0;
+    final daysLabel = isRoundTrip && tripDays > 1 ? ' · $tripDays days' : '';
     final parcel = json['parcel'] is Map
         ? Map<String, dynamic>.from(json['parcel'] as Map)
         : const <String, dynamic>{};
@@ -181,8 +187,8 @@ class RideRequest {
           : isIntercity
           ? (isRoundTrip
               ? (returnDateLabel.isNotEmpty
-                  ? 'Outstation · Round trip · Return $returnDateLabel'
-                  : 'Outstation · Round trip')
+                  ? 'Outstation · Round trip$daysLabel · Return $returnDateLabel'
+                  : 'Outstation · Round trip$daysLabel')
               : 'Outstation · One way')
           : (json['serviceType']?.toString() ?? 'Passenger ride'),
       isOutstation: isIntercity,
