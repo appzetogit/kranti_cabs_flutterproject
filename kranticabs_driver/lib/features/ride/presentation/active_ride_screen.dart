@@ -408,6 +408,14 @@ class _ActiveRideScreenState extends ConsumerState<ActiveRideScreen>
   /// can still be null on the very first frame and arrive a moment later.
   void _autoNavigateToPickupIfNeeded(RideModel ride, bool headingToPickup) {
     if (_autoNavigatedToPickup || !headingToPickup) return;
+    // A scheduled ride opens here 30 minutes before pickup: starting the
+    // drive then is right, but not for one still further out - the driver
+    // starts it with the navigate button when they actually set off.
+    final scheduledAt = ride.scheduledAt?.toLocal();
+    if (scheduledAt != null && scheduledAt.isAfter(DateTime.now().add(const Duration(minutes: 30)))) {
+      _autoNavigatedToPickup = true;
+      return;
+    }
     final lat = ride.pickupLat;
     final lng = ride.pickupLng;
     if (lat == null || lng == null) return;
