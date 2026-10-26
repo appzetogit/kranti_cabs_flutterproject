@@ -1,3 +1,4 @@
+import '../../../core/constants/app_constants.dart';
 import '../../kyc/application/kyc_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -238,6 +239,7 @@ class ProfileScreen extends ConsumerWidget {
                     subtitle: 'Claim coupons and referral bonuses',
                     onTap: () => context.push('/rewards'),
                   ),
+                  if (AppConstants.onlinePaymentsEnabled) ...[
                   Divider(height: 1, color: dividerColor),
                   ProfileTile(
                     icon: Icons.account_balance_wallet_outlined,
@@ -246,6 +248,7 @@ class ProfileScreen extends ConsumerWidget {
                     subtitle: 'Manage cards, UPI and transaction history',
                     onTap: () => context.push('/wallet'),
                   ),
+                  ],
                   ..._kycRow(context, ref, dividerColor),
                 ],
               ),

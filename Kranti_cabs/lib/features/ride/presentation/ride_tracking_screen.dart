@@ -1,3 +1,4 @@
+import '../../../core/constants/app_constants.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -152,7 +153,8 @@ class _RideTrackingScreenState extends ConsumerState<RideTrackingScreen>
 
     ref.listen(rideTrackingControllerProvider(widget.rideId), (previous, next) {
       final r = next.ride;
-      if (r != null &&
+      if (AppConstants.onlinePaymentsEnabled &&
+          r != null &&
           !_offeredPayment &&
           r.isUnderway &&
           !r.isCompleted &&
@@ -477,7 +479,7 @@ class _RideTrackingScreenState extends ConsumerState<RideTrackingScreen>
                     // Paying the fare, Rapido-style: during the trip, a cash
                     // ride can be paid online (or to the driver's UPI) from
                     // here, and says so once it has been.
-                    if (ride.isUnderway && !ride.isCompleted && ride.isCashRide) ...[
+                    if (AppConstants.onlinePaymentsEnabled && ride.isUnderway && !ride.isCompleted && ride.isCashRide) ...[
                       const SizedBox(height: 14),
                       _FarePaymentRow(ride: ride),
                     ],

@@ -1,3 +1,4 @@
+import '../../../core/constants/app_constants.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,6 +36,7 @@ class _RatingReviewScreenState extends ConsumerState<RatingReviewScreen> {
   }
 
   Future<void> _collectFareIfDue() async {
+    if (!AppConstants.onlinePaymentsEnabled) return;
     final ride = ref.read(rideTrackingControllerProvider(widget.rideId)).ride;
     if (ride == null) return;
     if ((ride.paymentMethod ?? 'cash').toLowerCase() != 'online') return;

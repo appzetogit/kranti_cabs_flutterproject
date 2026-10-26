@@ -48,6 +48,10 @@ class AppConstants {
   /// Razorpay publishable key — not yet provided.
   static const String stripPublishKey = '';
 
+  /// Cash-only for now. Flip to true to bring back Card/UPI, wallet and in-app
+  /// fare payment: the code behind them is still in place, only hidden.
+  static const bool onlinePaymentsEnabled = false;
+
   static const String packageName = 'com.kranticabs.user';
 
   /// Release keystore signing key alias/password — not yet provided.

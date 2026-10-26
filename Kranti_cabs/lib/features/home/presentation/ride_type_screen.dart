@@ -1,3 +1,4 @@
+import '../../../core/constants/app_constants.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -953,6 +954,7 @@ class _RideTypeScreenState extends ConsumerState<RideTypeScreen> {
               Navigator.of(context).pop();
             },
           ),
+          if (AppConstants.onlinePaymentsEnabled)
           ListTile(
             title: const Text('Card / UPI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
             leading: const Icon(Icons.credit_card_rounded, color: Color(0xFF60A5FA)),

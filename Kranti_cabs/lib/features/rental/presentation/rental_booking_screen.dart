@@ -1,3 +1,4 @@
+import '../../../core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -56,6 +57,9 @@ class _RentalBookingScreenState extends ConsumerState<RentalBookingScreen> {
   }
 
   double get _payableNow {
+    // The advance is taken from the wallet; with online payments off it is
+    // settled with the driver at pickup instead.
+    if (!AppConstants.onlinePaymentsEnabled) return 0;
     final pkg = _selectedPackage;
     if (pkg == null) return 0;
     return widget.vehicle.advancePayment.payableNowFor(pkg.price);

@@ -1,3 +1,4 @@
+import '../../../core/constants/app_constants.dart';
 import 'dart:async';
 import 'dart:developer' as developer;
 
@@ -209,7 +210,7 @@ class BookingController extends StateNotifier<BookingState> {
   }
 
   void setPaymentMethod(String method) {
-    state = state.copyWith(paymentMethod: method);
+    state = state.copyWith(paymentMethod: AppConstants.onlinePaymentsEnabled ? method : 'cash');
   }
 
   /// Checks [code] with the server and applies it, or removes the coupon when

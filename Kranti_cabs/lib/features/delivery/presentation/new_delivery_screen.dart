@@ -1,3 +1,4 @@
+import '../../../core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -208,6 +209,7 @@ class _NewDeliveryScreenState extends ConsumerState<NewDeliveryScreen> {
               Navigator.of(context).pop();
             },
           ),
+          if (AppConstants.onlinePaymentsEnabled)
           RadioListTile<String>(
             value: 'wallet',
             groupValue: _paymentMethod,
@@ -218,6 +220,7 @@ class _NewDeliveryScreenState extends ConsumerState<NewDeliveryScreen> {
               Navigator.of(context).pop();
             },
           ),
+          if (AppConstants.onlinePaymentsEnabled)
           RadioListTile<String>(
             value: 'razorpay',
             groupValue: _paymentMethod,

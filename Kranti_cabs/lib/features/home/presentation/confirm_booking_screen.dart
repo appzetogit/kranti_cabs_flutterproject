@@ -1,3 +1,4 @@
+import '../../../core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -453,6 +454,7 @@ class ConfirmBookingScreen extends ConsumerWidget {
               Navigator.of(context).pop();
             },
           ),
+          if (AppConstants.onlinePaymentsEnabled)
           RadioListTile<String>(
             value: 'razorpay',
             groupValue: current,
