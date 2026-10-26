@@ -72,6 +72,15 @@ class RideRequest {
   /// doesn't send it yet.
   final num? pickupDistanceMeters;
 
+  /// Pickup time for a ride booked for later; null for "now".
+  final DateTime? scheduledAt;
+
+  /// Booked for later and that time is still ahead.
+  bool get isScheduled => scheduledAt != null && scheduledAt!.isAfter(DateTime.now());
+
+  /// "29 Oct, 2:00 PM", or empty when not scheduled.
+  String get scheduledLabel => _formatReturnDate(scheduledAt?.toIso8601String());
+
   const RideRequest({
     required this.rideId,
     required this.pickupAddress,
@@ -100,6 +109,7 @@ class RideRequest {
     required this.estimatedDurationMinutes,
     required this.expiresInSeconds,
     this.pickupDistanceMeters,
+    this.scheduledAt,
   });
 
   factory RideRequest.fromJson(Map<String, dynamic> json) {
@@ -215,6 +225,7 @@ class RideRequest {
           (json['acceptRejectDurationSeconds'] as num?)?.toInt() ??
           25,
       pickupDistanceMeters: json['pickupDistanceMeters'] as num?,
+      scheduledAt: json['scheduledAt'] == null ? null : DateTime.tryParse(json['scheduledAt'].toString()),
     );
   }
 }
@@ -254,6 +265,7 @@ extension RideRequestBidBand on RideRequest {
       estimatedDurationMinutes: estimatedDurationMinutes,
       expiresInSeconds: expiresInSeconds,
       pickupDistanceMeters: pickupDistanceMeters,
+      scheduledAt: scheduledAt,
     );
   }
 }

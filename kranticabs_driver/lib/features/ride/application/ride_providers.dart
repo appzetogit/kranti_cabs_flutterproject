@@ -40,6 +40,13 @@ class RideNotifier extends StateNotifier<RideFlowState> {
 
   static const Duration _acceptAnswerWait = Duration(seconds: 12);
 
+  /// How long before pickup a scheduled ride becomes the trip on screen. The
+  /// server uses the same window (SCHEDULED_RIDE_ACTIVE_LEAD_MS).
+  static const Duration _scheduledActiveWindow = Duration(minutes: 30);
+
+  static bool _isLaterThanActiveWindow(DateTime? scheduledAt) =>
+      scheduledAt != null && scheduledAt.isAfter(DateTime.now().add(_scheduledActiveWindow));
+
   /// Ordering signal for the rider app: every location send tags itself with
   /// this counter, and the rider keeps only the highest one seen, so a
   /// packet delayed by network jitter can never move the marker backward.
@@ -267,15 +274,27 @@ class RideNotifier extends StateNotifier<RideFlowState> {
 
     socket.on(SocketEvents.rideAccepted, (data) {
       final rideId = _asMap(data)?['rideId']?.toString();
+      // Read before the offer is cleared: whether this was booked for later.
+      final incoming = state.incomingRequest;
+      final scheduledAt = incoming != null && incoming.rideId == rideId ? incoming.scheduledAt : null;
       _acceptTimeout?.cancel();
       _stopRingtone();
       _announceStatus('accepted');
       state = state.copyWith(
         clearIncomingRequest: true,
         clearAcceptError: true,
+        busy: false,
       );
       if (rideId == null || rideId.isEmpty) return;
       socket.joinRide(rideId);
+      // A ride for later is not a trip yet: it waits in Scheduled Rides and
+      // the server hands it over 30 minutes before pickup (with a reminder).
+      if (_isLaterThanActiveWindow(scheduledAt)) {
+        SnackbarUtils.success(
+          'Scheduled ride accepted for ${incoming!.scheduledLabel}. Find it in Scheduled Rides.',
+        );
+        return;
+      }
       // `ride:state` normally lands right behind this with the full trip, but
       // fetching guarantees the active-ride screen has rider/address/OTP data
       // even if that event is missed (e.g. a reconnect mid-accept).
@@ -294,9 +313,17 @@ class RideNotifier extends StateNotifier<RideFlowState> {
       // Ignore state for a ride we already finished or never took.
       if (next.id.isEmpty) return;
       if (next.status == 'cancelled' || next.status == 'completed') {
-        state = state.copyWith(clearActiveRide: true);
+        // Only the trip on screen. The driver is also in the rooms of their
+        // scheduled rides, and one of those being cancelled must not wipe the
+        // trip they are driving now.
+        if (state.activeRide == null || state.activeRide!.id == next.id) {
+          state = state.copyWith(clearActiveRide: true);
+        }
         return;
       }
+      // A scheduled ride further out than the hand-over window stays in
+      // Scheduled Rides; it is not the trip being driven.
+      if (state.activeRide?.id != next.id && _isLaterThanActiveWindow(next.scheduledAt)) return;
       state = state.copyWith(
         activeRide: next.copyWith(
           messages: next.messages.isEmpty

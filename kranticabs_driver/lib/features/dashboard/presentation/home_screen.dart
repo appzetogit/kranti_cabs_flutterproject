@@ -22,6 +22,8 @@ import '../../../shared/widgets/primary_button.dart';
 import '../application/dashboard_providers.dart';
 import 'driver_banner_strip.dart';
 import '../../destination/presentation/go_home_card.dart';
+import '../../scheduled/presentation/scheduled_rides_tile.dart';
+import '../../scheduled/application/scheduled_rides_providers.dart';
 import '../../heatmap/application/heatmap_controller.dart';
 import '../../heatmap/data/opportunity_models.dart';
 import '../../heatmap/presentation/surge_pill_icon.dart';
@@ -86,6 +88,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
     if (state != AppLifecycleState.resumed) return;
     _subscriptionNudgeShown = false;
     ref.read(subscriptionStatusProvider.notifier).refresh();
+    // Opened from a "head out now" reminder: the scheduled ride is the active
+    // trip from 30 minutes before pickup, so pick it up if none is on screen.
+    if (ref.read(rideProvider).activeRide == null) unawaited(_resumeActiveRide());
+    ref.invalidate(scheduledRidesProvider);
   }
 
   /// Awaited inside its own try: `resumeActiveRide` is async, so the
@@ -1179,6 +1185,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                   // 2b. GO HOME (destination mode) - hidden when the admin
                   // has it switched off.
                   const GoHomeCard(),
+
+                  // 2b'. SCHEDULED RIDES - own ones and open ones to take.
+                  const ScheduledRidesTile(),
 
                   // 2c. ZONE PROMO BANNERS (hidden when none / dismissed)
                   const DriverBannerStrip(),

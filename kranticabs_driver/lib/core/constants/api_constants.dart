@@ -113,6 +113,9 @@ class ApiConstants {
   /// Polled after reconnecting on the back of a `ride_request` push.
   static const String rideOffers = '/drivers/ride-offers';
   static const String scheduledRides = '/drivers/scheduled-rides';
+  /// REST accept (the native offer card uses it too). Also takes an open
+  /// scheduled ride from the Scheduled Rides list, in advance.
+  static String acceptRideOffer(String rideId) => '/drivers/ride-offers/$rideId/accept';
   static String cancelScheduledRide(String rideId) => '/drivers/scheduled-rides/$rideId/cancel';
 
   // Safety

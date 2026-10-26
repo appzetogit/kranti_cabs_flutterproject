@@ -217,6 +217,29 @@ class _RideRequestScreenState extends ConsumerState<RideRequestScreen> {
                                               ),
                                             ),
                                           ),
+                                        // Booked for later: say when, so it is
+                                        // never mistaken for a pickup now.
+                                        if (request.isScheduled)
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 6),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(Icons.event_rounded, size: 15, color: AppColors.primary),
+                                                const SizedBox(width: 5),
+                                                Flexible(
+                                                  child: Text(
+                                                    'Scheduled · ${request.scheduledLabel}',
+                                                    style: const TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w800,
+                                                      color: AppColors.primary,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                       ],
                                     ),
                                   ),

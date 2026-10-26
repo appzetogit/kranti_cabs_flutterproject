@@ -410,6 +410,14 @@ class ProfileScreen extends ConsumerWidget {
               onTap: () => context.push('/home-location'),
             ),
             _MenuTile(
+              iconBgColor: const Color(0xFF0C2E44),
+              iconColor: const Color(0xFF38BDF8),
+              icon: Icons.event_outlined,
+              title: 'Scheduled Rides',
+              subtitle: 'Your rides booked for later, and open ones',
+              onTap: () => context.push('/scheduled-rides'),
+            ),
+            _MenuTile(
               iconBgColor: const Color(0xFF123A2E),
               iconColor: AppColors.primary,
               icon: Icons.language_rounded,

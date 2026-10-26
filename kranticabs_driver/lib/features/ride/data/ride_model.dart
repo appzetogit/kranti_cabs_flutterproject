@@ -106,6 +106,9 @@ class RideModel {
   final String? riderProfileImage;
   final DateTime? completedAt;
   final DateTime? startedAt;
+
+  /// Pickup time for a ride booked for later; null for "now".
+  final DateTime? scheduledAt;
   final List<RideMessage> messages;
 
   /// Parcel details for a delivery, empty for an ordinary ride. Carries the
@@ -150,6 +153,7 @@ class RideModel {
     this.riderProfileImage,
     this.completedAt,
     this.startedAt,
+    this.scheduledAt,
     this.messages = const [],
     this.parcel = ParcelInfo.none,
     this.tollCharges = TollCharges.none,
@@ -199,6 +203,7 @@ class RideModel {
       riderProfileImage: (rider['profileImage'] ?? rider['image'] ?? rider['avatar'])?.toString(),
       completedAt: json['completedAt'] != null ? DateTime.tryParse(json['completedAt'].toString()) : null,
       startedAt: json['startedAt'] != null ? DateTime.tryParse(json['startedAt'].toString()) : null,
+      scheduledAt: json['scheduledAt'] != null ? DateTime.tryParse(json['scheduledAt'].toString()) : null,
       messages: (json['messages'] as List? ?? const [])
           .map((m) => RideMessage.fromJson(Map<String, dynamic>.from(m as Map)))
           .toList(),
@@ -253,6 +258,7 @@ class RideModel {
       riderProfileImage: riderProfileImage,
       completedAt: completedAt ?? this.completedAt,
       startedAt: startedAt,
+      scheduledAt: scheduledAt,
       messages: messages ?? this.messages,
       parcel: parcel ?? this.parcel,
       tollCharges: tollCharges,
