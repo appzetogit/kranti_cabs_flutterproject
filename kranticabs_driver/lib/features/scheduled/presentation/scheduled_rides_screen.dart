@@ -194,7 +194,9 @@ class _RideCard extends StatelessWidget {
         ? (ride.isRoundTrip
             ? 'Outstation · Round trip${ride.returnAt != null ? ' · Return ${_when(ride.returnAt)}' : ''}'
             : 'Outstation · One way')
-        : (ride.serviceType == 'parcel' ? 'Parcel' : 'City ride');
+        : ride.serviceType == 'hourly_rental'
+            ? 'Hourly rental'
+            : (ride.serviceType == 'parcel' ? 'Parcel' : 'City ride');
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),

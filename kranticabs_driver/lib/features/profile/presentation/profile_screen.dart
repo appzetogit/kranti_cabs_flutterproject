@@ -18,6 +18,7 @@ import '../../subscription/application/subscription_providers.dart';
 import '../../subscription/data/subscription_model.dart';
 import '../../../core/utils/ist_time.dart';
 import '../application/profile_providers.dart';
+import '../../rental/rental_preference_tile.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -417,6 +418,8 @@ class ProfileScreen extends ConsumerWidget {
               subtitle: 'Your rides booked for later, and open ones',
               onTap: () => context.push('/scheduled-rides'),
             ),
+            // Hourly rentals reach the driver only while this is on.
+            const RentalPreferenceTile(),
             _MenuTile(
               iconBgColor: const Color(0xFF123A2E),
               iconColor: AppColors.primary,

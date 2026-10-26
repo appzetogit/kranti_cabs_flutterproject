@@ -393,7 +393,8 @@ class RideNotifier extends StateNotifier<RideFlowState> {
       // The wallet can't take this ride (its commission would pass the credit
       // limit, or the driver is already past it). The message says how much
       // to top up; the offer itself cannot be taken, so it closes.
-      if (code == 'WALLET_LIMIT_FOR_RIDE' || code == 'WALLET_BELOW_LIMIT' || code == 'WALLET_PASS_REQUIRED') {
+      if (code == 'WALLET_LIMIT_FOR_RIDE' || code == 'WALLET_BELOW_LIMIT' || code == 'WALLET_PASS_REQUIRED' ||
+          code == 'RENTAL_NOT_ENABLED') {
         _stopRingtone();
         state = state.copyWith(
           busy: false,

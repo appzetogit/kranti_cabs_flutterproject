@@ -42,6 +42,11 @@ class _RentalUsageCardState extends State<RentalUsageCard> {
         ? 0
         : DateTime.now().difference(widget.startedAt!).inMinutes.clamp(0, 100000);
     final progress = r.includedMinutes > 0 ? (used / r.includedMinutes).clamp(0.0, 1.0) : 0.0;
+    // Past the package time the rider pays per extra minute: show it in red.
+    final included = r.includedMinutes.toInt();
+    final overMinutes = used - included;
+    final isOver = included > 0 && overMinutes > 0;
+    final timeColor = isOver ? const Color(0xFFF87171) : AppColors.primary;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -56,12 +61,19 @@ class _RentalUsageCardState extends State<RentalUsageCard> {
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
           if (widget.startedAt != null) ...[
-            Text('${_hm(used)} / ${_hm(r.includedMinutes.toInt())} hr used',
-                style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w800)),
+            Text('${_hm(used)} / ${_hm(included)} hr used',
+                style: TextStyle(color: timeColor, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 2),
+            Text(
+              isOver
+                  ? 'Extra time ${_hm(overMinutes)} · billed ₹${r.extraMinuteRate}/min'
+                  : '${_hm(included - used < 0 ? 0 : included - used)} left in the package',
+              style: TextStyle(color: isOver ? const Color(0xFFF87171) : AppColors.darkTextSecondary, fontSize: 12),
+            ),
             const SizedBox(height: 6),
             LinearProgressIndicator(
               value: progress,
-              color: AppColors.primary,
+              color: timeColor,
               backgroundColor: AppColors.darkBorder,
             ),
             const SizedBox(height: 8),
