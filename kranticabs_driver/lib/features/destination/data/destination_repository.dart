@@ -24,7 +24,8 @@ class DestinationRepository {
   Future<DestinationModeInfo> turnOff() async =>
       _parse(await _api.put(ApiConstants.destinationMode, data: {'enabled': false}));
 
-  /// Saves home. Moving it again is only allowed every few days (server rule).
+  /// Saves home. Any time, unless the admin set a waiting period
+  /// (`HOME_CHANGE_TOO_SOON`).
   Future<DestinationModeInfo> setHome({required double lat, required double lng, required String address}) async =>
       _parse(await _api.put(ApiConstants.homeLocation, data: {'lat': lat, 'lng': lng, 'address': address}));
 }

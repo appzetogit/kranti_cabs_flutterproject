@@ -76,14 +76,14 @@ class _GoHomeCardState extends ConsumerState<GoHomeCard> {
   Widget _texts(DestinationModeInfo info) {
     final title = info.enabled
         ? 'Heading to ${info.destinationLabel.isEmpty ? (info.isHome ? 'home' : 'your destination') : info.destinationLabel}'
-        : 'Going home?';
+        : 'On the way home rides';
     final subtitle = info.enabled
         ? 'Only rides on your way. Turns off when you arrive.'
         : !info.hasHome
             ? 'Save your home to get rides on the way there.'
             : info.usesLeft == 0
                 ? 'Used ${info.usedToday}/${info.usesPerDay} times today.'
-                : 'Get only rides towards home${info.usesLeft != null ? ' · ${info.usesLeft} left today' : ''}.';
+                : 'Turn on to get only rides towards home${info.usesLeft != null ? ' · ${info.usesLeft} left today' : ''}.';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -112,32 +112,25 @@ class _GoHomeCardState extends ConsumerState<GoHomeCard> {
     );
   }
 
+  /// The on/off toggle for rides on the way home. With no home saved yet it
+  /// is a "Set home" link instead, since there is nothing to head towards.
   Widget _action(BuildContext context, DestinationModeInfo info, DestinationModeNotifier notifier) {
-    if (info.enabled) {
-      return TextButton(
-        onPressed: () => _act(notifier.turnOff),
-        style: TextButton.styleFrom(foregroundColor: AppColors.primary),
-        child: const Text('Turn off', style: TextStyle(fontWeight: FontWeight.w800)),
-      );
-    }
-    if (!info.hasHome) {
+    if (!info.enabled && !info.hasHome) {
       return TextButton(
         onPressed: () => context.push('/home-location'),
         child: const Text('Set home', style: TextStyle(fontWeight: FontWeight.w800)),
       );
     }
-    return ElevatedButton(
-      onPressed: info.usesLeft == 0 ? null : () => _act(notifier.goHome),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary,
-        foregroundColor: const Color(0xFF0F172A),
-        // The app theme makes buttons full width; in a row that squeezes the
-        // text into nothing.
-        minimumSize: const Size(0, 38),
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      child: const Text('Go Home', style: TextStyle(fontWeight: FontWeight.w800)),
+    final canTurnOn = info.usesLeft != 0;
+    return Switch(
+      value: info.enabled,
+      activeThumbColor: const Color(0xFF0F172A),
+      activeTrackColor: AppColors.primary,
+      // Off with no uses left today: the switch is greyed out and the text
+      // under the title says why.
+      onChanged: info.enabled || canTurnOn
+          ? (on) => _act(on ? notifier.goHome : notifier.turnOff)
+          : null,
     );
   }
 }

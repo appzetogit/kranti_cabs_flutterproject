@@ -15,8 +15,9 @@ import '../data/destination_mode.dart';
 /// Where the driver's home is, for Go Home (destination mode).
 ///
 /// Set from the driver's current GPS position or a typed address; either way
-/// the resolved address is shown for confirmation before saving, since home
-/// can only be moved again after a few days.
+/// the resolved address is shown for confirmation before saving. Home can be
+/// moved any time unless the admin sets a waiting period, in which case the
+/// screen says when (`canChangeHomeAt`).
 class HomeLocationScreen extends ConsumerStatefulWidget {
   const HomeLocationScreen({super.key});
 
@@ -88,13 +89,13 @@ class _HomeLocationScreenState extends ConsumerState<HomeLocationScreen> {
 
   Future<void> _confirmAndSave(double lat, double lng, String address) async {
     final info = ref.read(destinationModeProvider).valueOrNull;
+    final currentHome = (info != null && info.hasHome) ? info.homeAddress : '';
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Save as home?'),
         content: Text(
-          '$address\n\n'
-          '${info?.hasHome == true ? 'After this you can move home again only after a few days.' : 'You can change it later, but not more than once every few days.'}',
+          currentHome.isNotEmpty ? '$address\n\nThis replaces your current home ($currentHome).' : address,
         ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
