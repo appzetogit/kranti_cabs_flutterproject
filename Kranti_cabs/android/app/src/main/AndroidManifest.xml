@@ -85,6 +85,12 @@
                 android:name="flutter_deeplinking_enabled"
                 android:value="false"/>
         </activity>
+        <!-- Razorpay's checkout only opens from inside this app. Pinned so a
+             build can never expose it, whichever SDK version it resolves. -->
+        <activity
+            android:name="com.razorpay.CheckoutActivity"
+            android:exported="false"
+            tools:replace="android:exported" />
         <!-- Routes background/terminated FCM notifications onto the same
              high-importance channel the app creates at runtime. Without this
              they land on a low-importance fallback channel and arrive silently. -->

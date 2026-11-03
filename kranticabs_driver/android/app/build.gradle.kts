@@ -28,7 +28,8 @@ android {
 
     defaultConfig {
         applicationId = "com.kranticabs.delivery"
-        minSdk = flutter.minSdkVersion
+        // Android 8. Older versions no longer get security updates.
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
