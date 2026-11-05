@@ -236,14 +236,19 @@ class ConfirmBookingScreen extends ConsumerWidget {
                         // No invented figures: these used to fall back to Rs 220, Rs 30
                         // and a Rs 250 total, over a made-up 12.6 km, whenever there was
                         // no fare - so a ride with no price was shown as costing Rs 250.
-                        _FareRow(label: 'Base Fare', value: fare == null ? '--' : '₹${fare.baseFare.round()}'),
-                        const SizedBox(height: 8),
-                        _FareRow(
-                          label: booking.distanceMeters == null
-                              ? 'Distance'
-                              : 'Distance (${Formatters.distanceKm(booking.distanceMeters!)})',
-                          value: fare == null ? '--' : '₹${fare.distanceFare.round()}',
-                        ),
+                        // One or the other on a city ride: the base price up to
+                        // the base distance, per km beyond it.
+                        if (fare == null || fare.baseFare > 0)
+                          _FareRow(label: 'Base Fare', value: fare == null ? '--' : '₹${fare.baseFare.round()}'),
+                        if (fare == null || (fare.baseFare > 0 && fare.distanceFare > 0))
+                          const SizedBox(height: 8),
+                        if (fare == null || fare.distanceFare > 0)
+                          _FareRow(
+                            label: booking.distanceMeters == null
+                                ? 'Distance'
+                                : 'Distance (${Formatters.distanceKm(booking.distanceMeters!)})',
+                            value: fare == null ? '--' : '₹${fare.distanceFare.round()}',
+                          ),
                         if (fare != null && fare.airportFee > 0) ...[
                           const SizedBox(height: 8),
                           _FareRow(label: 'Airport fee', value: _rupees(fare.airportFee)),

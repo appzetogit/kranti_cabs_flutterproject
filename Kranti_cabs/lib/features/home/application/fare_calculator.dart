@@ -63,6 +63,9 @@ class FareCalculator {
   /// [isOutstation] switches to the intercity tariff configured per vehicle
   /// type in Admin -> Set Prices, falling back to the city rate when a tariff
   /// has the outstation toggle on but no rates filled in.
+  ///
+  /// [addBaseBeyondBaseDistance] keeps base price + per km on the extra km, for
+  /// parcels, whose server-side quote still works that way.
   static FareBreakdown estimate({
     required SetPriceModel pricing,
     required double distanceMeters,
@@ -74,6 +77,7 @@ class FareCalculator {
     double parkingFrom = 0,
     bool parkingVaries = false,
     int tripDays = 1,
+    bool addBaseBeyondBaseDistance = false,
   }) {
     final locationTotal = locationCharges.fold<double>(0, (sum, line) => sum + line.amount);
     final useOutstation = isOutstation && pricing.supportsOutstation;
@@ -85,6 +89,7 @@ class FareCalculator {
         useOutstation ? pricing.outstationPricePerDistance : pricing.pricePerDistance;
     final perMinute = useOutstation ? pricing.outstationTimePrice : pricing.timePrice;
 
+    double baseFare = basePrice;
     double distanceFare;
     double timeFare;
     double driverAllowance = 0;
@@ -106,12 +111,23 @@ class FareCalculator {
       final legMultiplier = isRoundTrip ? 2 : 1;
       final distanceKm = (distanceMeters / 1000) * legMultiplier;
       final durationMinutes = (durationSeconds / 60) * legMultiplier;
-      final chargeableKm = (distanceKm - baseDistanceKm).clamp(0, double.infinity);
-      distanceFare = chargeableKm * perKm;
-      timeFare = durationMinutes * perMinute;
+      if (useOutstation || addBaseBeyondBaseDistance) {
+        final chargeableKm = (distanceKm - baseDistanceKm).clamp(0, double.infinity);
+        distanceFare = chargeableKm * perKm;
+        timeFare = durationMinutes * perMinute;
+      } else {
+        // City ride: the base price up to the base distance. Beyond it the
+        // whole trip is per km with no base price on top, never less than the
+        // base price itself. The server takes this fare as sent.
+        final perKmFare = distanceKm * perKm;
+        final paysBasePrice =
+            (baseDistanceKm > 0 && distanceKm <= baseDistanceKm) || perKmFare < basePrice;
+        baseFare = paysBasePrice ? basePrice : 0;
+        distanceFare = paysBasePrice ? 0 : perKmFare;
+        timeFare = paysBasePrice ? 0 : durationMinutes * perMinute;
+      }
     }
 
-    final baseFare = basePrice;
     final subtotal = baseFare + distanceFare + timeFare + driverAllowance;
     final serviceTax = subtotal * (pricing.serviceTaxPercent / 100);
     final total = (subtotal + serviceTax).clamp(basePrice, double.infinity);

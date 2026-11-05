@@ -130,6 +130,7 @@ class _NewDeliveryScreenState extends ConsumerState<NewDeliveryScreen> {
       pricing: pricing,
       distanceMeters: distanceMeters,
       durationSeconds: durationSeconds,
+      addBaseBeyondBaseDistance: true,
     );
     return breakdown.total;
   }
