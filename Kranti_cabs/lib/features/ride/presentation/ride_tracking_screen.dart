@@ -18,6 +18,7 @@ import '../data/models/ride_model.dart';
 import 'widgets/live_tracking_map.dart';
 import 'widgets/parcel_proof_strip.dart';
 import 'cancel_reason_sheet.dart';
+import 'widgets/rental_trip_card.dart';
 import 'ride_upi_pay_sheet.dart';
 
 class RideTrackingScreen extends ConsumerStatefulWidget {
@@ -435,6 +436,11 @@ class _RideTrackingScreenState extends ConsumerState<RideTrackingScreen>
                         ),
                       ),
 
+                    if (ride.rental != null) ...[
+                      const SizedBox(height: 12),
+                      RentalTripCard(rental: ride.rental!, startedAt: ride.startedAt),
+                    ],
+
                     // Start-of-trip PIN, shown one digit per box so it reads
                     // at a glance — the number the rider actually hands the
                     // driver, not a label to parse. Gone once the trip has
@@ -698,6 +704,23 @@ class _RideTrackingScreenState extends ConsumerState<RideTrackingScreen>
                               ),
                             ),
                           ),
+                          for (final stop in ride.stops) ...[
+                            Row(
+                              children: [
+                                const Icon(Icons.circle, size: 10, color: Color(0xFFF59E0B)),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Stop · ${stop.address}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                          ],
                           Row(
                             children: [
                               const Icon(

@@ -12,6 +12,7 @@ import '../data/models/set_price_model.dart';
 import '../data/models/surge_info.dart';
 import '../data/models/trip_category.dart';
 import '../data/models/vehicle_type_model.dart';
+import '../../rental/data/hourly_rental.dart';
 import 'booking_state.dart';
 import 'fare_calculator.dart';
 import 'home_providers.dart';
@@ -429,6 +430,12 @@ class BookingController extends StateNotifier<BookingState> {
       return 'Please select pickup, drop and a ride type';
     }
     if (state.checkingTrip) return 'Checking your trip. One moment.';
+    // An outstation trip is a planned one: it is booked for its departure time
+    // and goes to drivers as a scheduled ride. As ride-now, the first driver to
+    // accept started it on the spot, hours or days before the rider leaves.
+    if (state.isOutstation && state.scheduledAt == null) {
+      return 'Choose when your outstation trip leaves.';
+    }
     if (state.fareBreakdown != null) return null;
     if (state.distanceMeters != null &&
         state.durationSeconds != null &&
@@ -712,6 +719,72 @@ class BookingController extends StateNotifier<BookingState> {
         error: e.toString(),
         step: BookingStep.noDriverFound,
       );
+      return BookingAttempt.failed;
+    }
+  }
+
+  /// Books an hourly rental with a driver: a pickup only, a package and a cab.
+  ///
+  /// Same endpoint and search flow as a normal ride. The server prices it from
+  /// the package, so the app's fare is display-only. [scheduledAt] makes it a
+  /// scheduled ride ("Ride later").
+  Future<BookingAttempt> bookHourlyRental({
+    required BookingLocation pickup,
+    required HourlyRentalPackage package,
+    required HourlyRentalVehicle vehicle,
+    DateTime? scheduledAt,
+  }) async {
+    // The finding-driver screen reads its route and cab from this state; a
+    // rental has no drop, so the drop is the pickup.
+    final catalogue = ref.read(allVehicleTypesProvider).valueOrNull ?? const <VehicleTypeModel>[];
+    final matches = catalogue.where((v) => v.id == vehicle.vehicleTypeId);
+    final stepBefore = state.step;
+    setScheduledAt(scheduledAt);
+    state = state.copyWith(
+      pickup: pickup,
+      drop: pickup,
+      selectedVehicle: matches.isEmpty ? null : matches.first,
+      paymentMethod: 'cash',
+      isSubmitting: true,
+      clearError: true,
+      step: BookingStep.findingDriver,
+    );
+
+    final search = ref.read(rideSearchControllerProvider.notifier);
+    search.beginCreating();
+    try {
+      final ride = await ref.read(rideRepositoryProvider).createRide(
+            pickup: [pickup.lng, pickup.lat],
+            drop: [pickup.lng, pickup.lat],
+            pickupAddress: pickup.address,
+            dropAddress: pickup.address,
+            fare: vehicle.price.toDouble(),
+            estimatedDistanceMeters: vehicle.includedKm.toDouble() * 1000,
+            estimatedDurationMinutes: vehicle.includedMinutes.toDouble(),
+            vehicleTypeId: vehicle.vehicleTypeId,
+            paymentMethod: 'cash',
+            serviceType: 'hourly_rental',
+            scheduledAt: scheduledAt,
+            rental: {'packagePriceId': package.id},
+          );
+      search.attachRide(ride);
+      state = state.copyWith(isSubmitting: false, createdRide: ride, step: BookingStep.dispatched);
+      return BookingAttempt.booked;
+    } catch (e) {
+      if (e is ApiException && e.code == 'KYC_REQUIRED') {
+        search.reset();
+        state = state.copyWith(isSubmitting: false, error: e.message, step: stepBefore);
+        return BookingAttempt.kycRequired;
+      }
+      // Refused before anything was booked: say why rather than "no driver found".
+      if (e is ApiException &&
+          (e.code == 'SCHEDULE_TOO_SOON' || e.code == 'SCHEDULE_TOO_FAR' || e.code == 'RENTAL_VEHICLE_DISABLED')) {
+        search.reset();
+        state = state.copyWith(isSubmitting: false, error: e.message, step: stepBefore);
+        return BookingAttempt.notReady;
+      }
+      search.failCreate(e.toString());
+      state = state.copyWith(isSubmitting: false, error: e.toString(), step: BookingStep.noDriverFound);
       return BookingAttempt.failed;
     }
   }

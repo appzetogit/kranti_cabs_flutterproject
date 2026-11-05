@@ -1,3 +1,4 @@
+import '../features/rental/presentation/hourly_rental_screen.dart';
 import '../features/kyc/presentation/verify_identity_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -326,8 +327,14 @@ final appRouter = GoRouter(
     ),
 
     // Rental
+    // Hourly rental with a driver. The old vehicle-rental screen (empty
+    // catalogue) stays in the code, unlinked, at /rental/vehicles.
     GoRoute(
       path: '/rental',
+      builder: (context, state) => const HourlyRentalScreen(),
+    ),
+    GoRoute(
+      path: '/rental/vehicles',
       builder: (context, state) => const RentalVehiclesScreen(),
     ),
     GoRoute(

@@ -1,4 +1,5 @@
 import '../../kyc/application/kyc_providers.dart';
+import '../../../core/services/audio_service.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -48,6 +49,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       (_) => ref.invalidate(bannersProvider),
     );
     _scroll.addListener(() => _pinned.value = _scroll.offset > 164);
+    // Welcome sound once after login.
+    final userId = ref.read(authControllerProvider).user?.id;
+    if (userId != null && userId.isNotEmpty) AudioService.playWelcome(userId);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(bookingControllerProvider.notifier).loadCatalog();
       _maybePromptKyc();

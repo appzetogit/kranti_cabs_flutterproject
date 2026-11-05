@@ -503,6 +503,16 @@ class _RideTypeScreenState extends ConsumerState<RideTypeScreen> {
                                       ],
                                     ),
 
+                                    if (booking.stops.isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'via ${booking.stops.map((st) => st.address.split(',').first.trim()).join(', ')}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFFF59E0B)),
+                                      ),
+                                    ],
+
                                     const SizedBox(height: 6),
 
                                     // Distance & Duration Pills

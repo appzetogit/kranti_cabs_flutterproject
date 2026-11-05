@@ -1,3 +1,4 @@
+import '../../../rental/data/hourly_rental.dart';
 import '../../../delivery/data/models/parcel_model.dart';
 import 'ride_bid_model.dart';
 import 'ride_message_model.dart';
@@ -238,6 +239,9 @@ class RideModel {
   /// to [fare] again.
   final List<RideLocationCharge> locationCharges;
 
+  /// Hourly-rental terms and bill; null for any other ride.
+  final RideRental? rental;
+
   const RideModel({
     required this.rideId,
     required this.status,
@@ -274,6 +278,7 @@ class RideModel {
     this.parcel = const ParcelModel(),
     this.bidding = RideBiddingInfo.none,
     this.locationCharges = const [],
+    this.rental,
   });
 
   bool get isParcel => (serviceType ?? '').toLowerCase() == 'parcel';
@@ -373,6 +378,7 @@ class RideModel {
       vehicleType: json['vehicleType']?.toString(),
       vehicleIconType: json['vehicleIconType']?.toString(),
       locationCharges: RideLocationCharge.listFromJson(json['locationCharges']),
+      rental: RideRental.maybe(json['rental']),
     );
   }
 
@@ -428,6 +434,7 @@ class RideModel {
       parcel: parcel,
       bidding: bidding,
       locationCharges: locationCharges,
+      rental: rental,
     );
   }
 

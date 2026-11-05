@@ -179,11 +179,8 @@ class _SearchDestinationScreenState
     final booking = ref.read(bookingControllerProvider.notifier);
     booking.setScheduledAt(picked);
     if (_returnAt == null) booking.setReturnAt(null);
-  }
-
-  void _leaveNow() {
-    setState(() => _leaveAt = null);
-    ref.read(bookingControllerProvider.notifier).setScheduledAt(null);
+    // Pickup and drop were already chosen: carry on to the cabs.
+    if (_pickup != null && _drop != null) _tryProceedToRideTypes();
   }
 
   /// Date + time picker for the return leg of a round-trip outstation ride:
@@ -355,6 +352,32 @@ class _SearchDestinationScreenState
 
   void _onTextChanged() {
     if (mounted) setState(() {});
+  }
+
+  /// Most stops a ride can have; the server refuses a 4th.
+  static const _maxStops = 3;
+
+  /// "+ Add stop": a new empty stop field between pickup and drop, ready to type in.
+  void _addStop() {
+    if (_stops.length >= _maxStops) return;
+    setState(() {
+      _stopControllers.add(TextEditingController());
+      _stops.add(null);
+      _activeTarget = FieldTarget.stop(_stops.length - 1);
+      _results = [];
+    });
+  }
+
+  void _removeStop(int index) {
+    if (index < 0 || index >= _stops.length) return;
+    setState(() {
+      _stopControllers.removeAt(index).dispose();
+      _stops.removeAt(index);
+      _activeTarget = const FieldTarget.drop();
+      _results = [];
+    });
+    // Pickup and drop already chosen: carry on with the stops that are left.
+    _tryProceedToRideTypes();
   }
 
   void _onFocusChanged() {
@@ -1310,6 +1333,18 @@ class _SearchDestinationScreenState
       return;
     }
 
+    // Outstation is booked for its departure time, so ask for it before
+    // leaving this screen instead of dropping the rider on a blocked booking.
+    if (widget.isOutstation && _leaveAt == null) {
+      SnackbarUtils.info(context, 'Choose when your outstation trip leaves');
+      _pickLeaveDateTime();
+      return;
+    }
+
+    // A stop field the rider added but has not filled yet: wait for it (or for
+    // its X) rather than leave for the cab list without it.
+    if (_stops.any((stop) => stop == null)) return;
+
     final validStops = _stops.whereType<BookingLocation>().toList();
     ref.read(bookingControllerProvider.notifier)
       ..setPickup(_pickup!)
@@ -1365,8 +1400,12 @@ class _SearchDestinationScreenState
             ? _pickupController.text
             : _dropController.text)
         .trim();
+    final activeStopIndex = _activeTarget.type == FieldTargetType.stop ? _activeTarget.stopIndex : null;
     final bool isTyping = (_pickupFocus.hasFocus && _pickupController.text.trim().isNotEmpty) ||
-        (_dropFocus.hasFocus && _dropController.text.trim().isNotEmpty);
+        (_dropFocus.hasFocus && _dropController.text.trim().isNotEmpty) ||
+        (activeStopIndex != null &&
+            activeStopIndex < _stopControllers.length &&
+            _stopControllers[activeStopIndex].text.trim().isNotEmpty);
     final bool isSearchMode = hasResults || isSearching || isTyping;
 
     return Scaffold(
@@ -1540,6 +1579,56 @@ class _SearchDestinationScreenState
                                   ),
                                 ),
 
+                                // Stops between pickup and drop, in order.
+                                for (var i = 0; i < _stopControllers.length; i++) ...[
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 10,
+                                        height: 10,
+                                        decoration: const BoxDecoration(color: Color(0xFFF59E0B), shape: BoxShape.circle),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: TextField(
+                                          controller: _stopControllers[i],
+                                          cursorColor: tealColor,
+                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
+                                          decoration: InputDecoration(
+                                            isDense: true,
+                                            filled: false,
+                                            contentPadding: EdgeInsets.zero,
+                                            border: InputBorder.none,
+                                            enabledBorder: InputBorder.none,
+                                            focusedBorder: InputBorder.none,
+                                            hintText: 'Stop ${i + 1}',
+                                            hintStyle: const TextStyle(color: textSecondary, fontSize: 13.5),
+                                          ),
+                                          onTap: () => setState(() => _activeTarget = FieldTarget.stop(i)),
+                                          onChanged: (v) {
+                                            // Typing again means a different place: forget the old one.
+                                            _stops[i] = null;
+                                            setState(() => _activeTarget = FieldTarget.stop(i));
+                                            _onQueryChanged(v);
+                                          },
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap: () => _removeStop(i),
+                                        child: const Padding(
+                                          padding: EdgeInsets.all(4),
+                                          child: Icon(Icons.close_rounded, color: Color(0xFF94A3B8), size: 20),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 6),
+                                    child: Divider(height: 1, color: Color(0xFF2A2A2A)),
+                                  ),
+                                ],
+
                                 // Drop Row
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -1629,6 +1718,21 @@ class _SearchDestinationScreenState
                                       ),
                                   ],
                                 ),
+                                if (_stops.length < _maxStops)
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: TextButton.icon(
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: tealColor,
+                                        padding: const EdgeInsets.only(top: 6),
+                                        minimumSize: Size.zero,
+                                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      ),
+                                      onPressed: _addStop,
+                                      icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                                      label: const Text('Add stop', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
@@ -1947,10 +2051,11 @@ class _SearchDestinationScreenState
                             _dateTimeRow(
                               icon: Icons.schedule_rounded,
                               label: 'Leave on',
-                              value: _leaveAt == null ? 'Now' : _formatReturnDateTime(_leaveAt!),
-                              highlighted: _leaveAt != null,
+                              value: _leaveAt == null ? 'Choose date & time' : _formatReturnDateTime(_leaveAt!),
+                              highlighted: true,
                               onTap: _pickLeaveDateTime,
-                              onClear: _leaveAt == null ? null : _leaveNow,
+                              // No "Now": an outstation trip is always booked for its time.
+                              onClear: null,
                               cardBgColor: cardBgColor,
                               borderColor: borderColor,
                               accent: tealColor,

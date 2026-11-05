@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../../core/services/audio_service.dart';
 import 'dart:developer' as developer;
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -151,6 +152,7 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    AudioService.resetWelcome();
     await ref.read(secureStorageServiceProvider).deleteToken();
     ref.read(socketServiceProvider).disconnect();
     state = const AuthState(status: AuthStatus.unauthenticated);

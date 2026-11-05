@@ -277,6 +277,27 @@ class RideDetailScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
+                      for (final stop in ride.stops) ...[
+                        Row(
+                          children: [
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: const BoxDecoration(color: Color(0xFFF59E0B), shape: BoxShape.circle),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Stop · ${stop.address}',
+                                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: textPrimary),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       Row(
                         children: [
                           Container(

@@ -59,6 +59,8 @@ class RideRepository {
     double? platformFee,
     /// The demand surge [fare] was priced under; already included in it.
     double? surgeMultiplier,
+    /// Hourly-rental booking: `{ packagePriceId }`. The server prices it from the package.
+    Map<String, dynamic>? rental,
   }) async {
     final data = await api.post(ApiConstants.rides, data: {
       'pickup': pickup,
@@ -81,6 +83,7 @@ class RideRepository {
       // them as intercity.
       'transport_type': 'taxi',
       if (intercity != null && intercity.isNotEmpty) 'intercity': intercity,
+      if (rental != null) 'rental': rental,
       if (scheduledAt != null) 'scheduledAt': scheduledAt.toUtc().toIso8601String(),
       if (bookingMode != null && bookingMode.isNotEmpty) 'bookingMode': bookingMode,
       if (userMaxBidFare != null && userMaxBidFare > 0) 'userMaxBidFare': userMaxBidFare,
