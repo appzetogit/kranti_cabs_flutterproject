@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../../core/services/welcome_sound.dart';
 import 'dart:io' show Platform;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -202,6 +203,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    WelcomeSound.reset();
     ref.read(socketServiceProvider).disconnect();
     await RideOfferChannel.clearSession();
     await ref.read(secureStorageServiceProvider).clearAll();

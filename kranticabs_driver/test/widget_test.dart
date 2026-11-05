@@ -9,10 +9,10 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
-        home: const Scaffold(body: Center(child: Text('KrantiCabs Rider'))),
+        home: const Scaffold(body: Center(child: Text('KrantiCabs Partner'))),
       ),
     );
 
-    expect(find.text('KrantiCabs Rider'), findsOneWidget);
+    expect(find.text('KrantiCabs Partner'), findsOneWidget);
   });
 }

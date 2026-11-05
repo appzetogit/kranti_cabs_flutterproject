@@ -1,4 +1,4 @@
-# KrantiCabs Rider
+# KrantiCabs Partner
 
 The KrantiCabs driver app: going online, receiving and accepting ride offers,
 running trips, and tracking earnings. Flutter, talking to

@@ -86,6 +86,14 @@ class ProfileRepository {
     });
   }
 
+  /// Deletes the account now (`DELETE /drivers/me`): the server deactivates it,
+  /// signs it out everywhere and refuses while a trip is active (409). The older
+  /// `delete-request` only queued a request for admin review, so nothing was
+  /// deleted at the time.
+  Future<void> deleteAccount(String reason) {
+    return _api.delete(ApiConstants.me, data: {'reason': reason});
+  }
+
   Future<void> requestAccountDeletion(String reason) {
     return _api.post(ApiConstants.deleteRequest, data: {'reason': reason});
   }

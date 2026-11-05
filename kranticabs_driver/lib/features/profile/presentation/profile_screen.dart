@@ -504,6 +504,17 @@ class ProfileScreen extends ConsumerWidget {
 
             const SizedBox(height: 16),
 
+            _MenuTile(
+              iconBgColor: const Color(0xFF450A0A),
+              iconColor: const Color(0xFFEF4444),
+              icon: Icons.delete_outline_rounded,
+              title: 'Delete Account',
+              subtitle: 'Permanently delete your account',
+              onTap: () => context.push('/delete-account'),
+            ),
+
+            const SizedBox(height: 10),
+
             // Logout Tile
             _MenuTile(
               iconBgColor: const Color(0xFF450A0A),

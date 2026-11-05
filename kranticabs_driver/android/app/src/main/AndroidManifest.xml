@@ -18,6 +18,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
@@ -27,7 +28,7 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
 
     <application
-        android:label="KrantiCabs Rider"
+        android:label="KrantiCabs Partner"
         android:allowBackup="false"
         tools:replace="android:allowBackup"
         android:name="${applicationName}"
@@ -62,6 +63,17 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- The floating bubble opens the app with this link. It runs in its own
+                 engine and cannot message the app's, so it launches the activity. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="kranticabs-partner" android:host="open"/>
+            </intent-filter>
+            <!-- That link only brings the app forward; the router must not try to
+                 open it as a screen. -->
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="false"/>
         </activity>
         <!-- The full-screen ride-offer card. Native, not Flutter: it has to be
              posted from Kotlin while the app may be killed, and it must draw
@@ -109,6 +121,18 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="location" />
+
+        <!-- The floating bubble drawn over other apps while the driver is online
+             and the app is in the background (flutter_overlay_window). -->
+        <service
+            android:name="flutter.overlay.window.flutter_overlay_window.OverlayService"
+            android:exported="false"
+            android:stopWithTask="true"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Shows a floating bubble so an online driver can return to the app and see ride requests" />
+        </service>
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"

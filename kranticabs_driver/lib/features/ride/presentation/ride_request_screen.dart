@@ -488,6 +488,25 @@ class _RideRequestScreenState extends ConsumerState<RideRequestScreen> {
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),
+                                        if (request.stops.isNotEmpty) ...[
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'VIA · ${request.stops.length} ${request.stops.length == 1 ? 'STOP' : 'STOPS'}',
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              color: Color(0xFFF59E0B),
+                                              fontWeight: FontWeight.w900,
+                                              letterSpacing: 0.8,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            request.stops.map((st) => st.address).join(' | '),
+                                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
                                         ],
                                       ],
                                     ),

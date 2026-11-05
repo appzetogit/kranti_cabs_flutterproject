@@ -13,7 +13,7 @@ import 'package:flutter/foundation.dart';
 class AppConstants {
   AppConstants._();
 
-  static const String title = 'KrantiCabs Rider';
+  static const String title = 'KrantiCabs Partner';
 
   /// Backend REST API base URL (all endpoints are mounted under `/api/v1`).
   static const String baseUrl = 'https://kranticabs.com/api/v1';

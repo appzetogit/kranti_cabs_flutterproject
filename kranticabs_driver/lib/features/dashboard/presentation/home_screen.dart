@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../../core/services/welcome_sound.dart';
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:easy_localization/easy_localization.dart';
@@ -47,6 +48,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Welcome sound once after login.
+    final driverId = ref.read(authProvider).driver?.id;
+    if (driverId != null && driverId.isNotEmpty) WelcomeSound.play(driverId);
     // Drives the subscription ring card's "Xh Ym left" label — it reads
     // straight off `expiresAt` each tick, nothing is computed and cached.
     _subscriptionCountdownTimer = Timer.periodic(const Duration(seconds: 30), (_) {

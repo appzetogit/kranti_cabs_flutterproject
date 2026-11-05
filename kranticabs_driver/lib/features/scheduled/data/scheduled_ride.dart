@@ -5,6 +5,9 @@ class ScheduledRide {
   final DateTime? scheduledAt;
   final String pickupAddress;
   final String dropAddress;
+
+  /// Number of stops between pickup and drop.
+  final int stopsCount;
   final num fare;
   final String paymentMethod;
   final num distanceMeters;
@@ -24,6 +27,7 @@ class ScheduledRide {
     this.scheduledAt,
     this.pickupAddress = '',
     this.dropAddress = '',
+    this.stopsCount = 0,
     this.fare = 0,
     this.paymentMethod = 'cash',
     this.distanceMeters = 0,
@@ -51,6 +55,7 @@ class ScheduledRide {
       scheduledAt: date(json['scheduledAt']),
       pickupAddress: (json['pickupAddress'] ?? '').toString(),
       dropAddress: (json['dropAddress'] ?? '').toString(),
+      stopsCount: json['stops'] is List ? (json['stops'] as List).length : 0,
       fare: number(json['fare']),
       paymentMethod: (json['paymentMethod'] ?? 'cash').toString(),
       distanceMeters: number(json['estimatedDistanceMeters']),

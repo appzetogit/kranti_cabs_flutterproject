@@ -130,6 +130,19 @@
                     android:lineSpacingExtra="1dp"
                     android:textColor="@color/zc_offer_muted"
                     android:textSize="13.5sp" />
+
+                <!-- "via ..." when the ride has stops; hidden otherwise -->
+                <TextView
+                    android:id="@+id/offer_stops"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    android:textColor="@color/zc_offer_ink"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>
 

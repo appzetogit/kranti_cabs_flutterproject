@@ -114,6 +114,15 @@ class RideOfferActivity : Activity() {
         findViewById<TextView>(R.id.offer_trip_distance).text = formatKm(offer.tripDistanceKm)
         findViewById<TextView>(R.id.offer_pickup_address).text = styleAddress(offer.pickupAddress)
         findViewById<TextView>(R.id.offer_drop_address).text = styleAddress(offer.dropAddress)
+        findViewById<TextView>(R.id.offer_stops).apply {
+            if (offer.stopsCount > 0) {
+                val plural = if (offer.stopsCount == 1) "stop" else "stops"
+                text = "via ${offer.stopsCount} $plural: ${offer.stopsSummary}".trimEnd(' ', ':')
+                visibility = android.view.View.VISIBLE
+            } else {
+                visibility = android.view.View.GONE
+            }
+        }
 
         bindVehicleArt(offer)
 

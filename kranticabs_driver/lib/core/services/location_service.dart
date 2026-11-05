@@ -102,7 +102,7 @@ class LocationService {
             foregroundNotificationConfig: ForegroundNotificationConfig(
               notificationTitle: 'Sharing your location',
               notificationText:
-                  'KrantiCabs Rider shares your location with riders while you are online or on a trip.',
+                  'KrantiCabs Partner shares your location with riders while you are online or on a trip.',
               notificationChannelName: 'Location while online',
               enableWakeLock: true,
               setOngoing: true,

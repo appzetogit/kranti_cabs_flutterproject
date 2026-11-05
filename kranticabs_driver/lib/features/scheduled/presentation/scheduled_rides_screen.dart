@@ -223,7 +223,7 @@ class _RideCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '$tag · $km${ride.paymentMethod.toUpperCase()}',
+            '$tag · $km${ride.paymentMethod.toUpperCase()}${ride.stopsCount > 0 ? ' · ${ride.stopsCount} ${ride.stopsCount == 1 ? 'stop' : 'stops'}' : ''}',
             style: const TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 10),

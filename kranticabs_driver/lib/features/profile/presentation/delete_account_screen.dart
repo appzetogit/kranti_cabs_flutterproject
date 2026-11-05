@@ -38,7 +38,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Delete account?'),
         content: const Text(
-          'This will permanently delete your driver account and all associated data. This action cannot be undone.',
+          'Your driver account will be deleted now and you will be signed out. You will not be able to log in with this number again, and this cannot be undone.',
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
@@ -54,10 +54,11 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     if (!mounted) return;
     setState(() => _submitting = true);
     try {
-      await ref.read(profileRepositoryProvider).requestAccountDeletion(_reasonController.text.trim());
+      await ref.read(profileRepositoryProvider).deleteAccount(_reasonController.text.trim());
+      // Gone on the server: sign out here too (token, socket, native session).
       await ref.read(authProvider.notifier).logout();
       if (mounted) {
-        SnackbarUtils.success('Account deletion requested');
+        SnackbarUtils.success('Your account has been deleted');
         context.go('/welcome');
       }
     } on ApiException catch (e) {
@@ -86,7 +87,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Deleting your account is permanent. Your ride history, earnings and documents will be removed.',
+                    'Deleting your account is permanent. You must finish or cancel any active ride first, and withdraw your wallet balance before you go.',
                     style: TextStyle(color: AppColors.error, fontSize: 12, fontWeight: FontWeight.w600),
                   ),
                 ),

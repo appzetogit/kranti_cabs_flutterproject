@@ -377,9 +377,14 @@ class _ActiveRideScreenState extends ConsumerState<ActiveRideScreen>
     super.dispose();
   }
 
-  Future<void> _openExternalNavigation(double lat, double lng) async {
+  /// [stops] are waypoints for the drop leg: the directions URL takes them,
+  /// `google.navigation:` does not.
+  Future<void> _openExternalNavigation(double lat, double lng, {List<RideStopModel> stops = const []}) async {
+    final waypoints = stops.map((s) => '${s.lat},${s.lng}').join('|');
     final uri = Uri.parse(
-      'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving',
+      'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng'
+      '${waypoints.isEmpty ? '' : '&waypoints=${Uri.encodeComponent(waypoints)}'}'
+      '&travelmode=driving',
     );
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -391,7 +396,12 @@ class _ActiveRideScreenState extends ConsumerState<ActiveRideScreen>
   /// the Android intent Google Maps treats as "begin driving now"; the plain
   /// maps URL ([_openExternalNavigation]) is the fallback for a device
   /// without the Maps app (or iOS, which does not recognise that scheme).
-  Future<void> _startNavigationTo(double lat, double lng) async {
+  Future<void> _startNavigationTo(double lat, double lng, {List<RideStopModel> stops = const []}) async {
+    // With stops the directions URL is the only way to route through them.
+    if (stops.isNotEmpty) {
+      await _openExternalNavigation(lat, lng, stops: stops);
+      return;
+    }
     final navigationUri = Uri.parse('google.navigation:q=$lat,$lng&mode=d');
     if (await canLaunchUrl(navigationUri)) {
       await launchUrl(navigationUri, mode: LaunchMode.externalApplication);
@@ -662,7 +672,7 @@ class _ActiveRideScreenState extends ConsumerState<ActiveRideScreen>
           lat != null &&
           lng != null) {
         _autoNavigatedToDrop = true;
-        unawaited(_startNavigationTo(lat, lng));
+        unawaited(_startNavigationTo(lat, lng, stops: ride.stops));
       }
     });
 
@@ -871,7 +881,7 @@ class _ActiveRideScreenState extends ConsumerState<ActiveRideScreen>
                   _DarkCircleIconButton(
                     icon: Icons.directions_outlined,
                     color: AppColors.primary,
-                    onTap: () => _openExternalNavigation(destLat, destLng),
+                    onTap: () => _openExternalNavigation(destLat, destLng, stops: headingToPickup ? const [] : ride.stops),
                   ),
                 ],
                 const SizedBox(height: 10),
@@ -1182,6 +1192,37 @@ class _ActiveRideScreenState extends ConsumerState<ActiveRideScreen>
                                         ),
                                       ),
                                     ),
+                                    // Stops, in order, between pickup and drop.
+                                    for (var i = 0; i < ride.stops.length; i++) ...[
+                                      Row(
+                                        children: [
+                                          Container(
+                                            width: 10,
+                                            height: 10,
+                                            decoration: const BoxDecoration(color: Color(0xFFF59E0B), shape: BoxShape.circle),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Text(
+                                              'Stop ${i + 1} · ${ride.stops[i].address}',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.only(left: 4, top: 3, bottom: 3),
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: SizedBox(
+                                            height: 10,
+                                            child: VerticalDivider(color: Color(0xFF334155), thickness: 1.5),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                     Row(
                                       children: [
                                         Container(

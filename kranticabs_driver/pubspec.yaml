@@ -1,8 +1,8 @@
 name: flutterdriver
-description: "KrantiCabs Rider - premium taxi driver experience."
+description: "KrantiCabs Partner - premium taxi driver experience."
 publish_to: 'none'
 
-version: 1.0.0+18
+version: 1.0.0+1
 
 environment:
   sdk: ^3.11.0
@@ -77,6 +77,8 @@ dependencies:
   logger: ^2.5.0
   package_info_plus: ^8.1.2
   device_info_plus: ^11.2.0
+  flutter_overlay_window: ^1.0.2
+  android_intent_plus: ^6.1.0
 
 dev_dependencies:
   flutter_test:

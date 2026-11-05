@@ -22,6 +22,9 @@ data class RideOfferPayload(
     val riderName: String,
     /** `intercity` (outstation), `hourly_rental`, `parcel`... straight from the push. */
     val serviceType: String = "",
+    /** Stops on the ride and a "A | B" summary, from the push (stopsCount / stopsSummary). */
+    val stopsCount: Int = 0,
+    val stopsSummary: String = "",
 ) {
     fun writeTo(intent: Intent): Intent = intent.apply {
         putExtra(EXTRA_RIDE_ID, rideId)
@@ -35,6 +38,8 @@ data class RideOfferPayload(
         putExtra(EXTRA_EXPIRES_IN, expiresInSeconds)
         putExtra(EXTRA_RIDER_NAME, riderName)
         putExtra(EXTRA_SERVICE_TYPE, serviceType)
+        putExtra(EXTRA_STOPS_COUNT, stopsCount)
+        putExtra(EXTRA_STOPS_SUMMARY, stopsSummary)
     }
 
     companion object {
@@ -49,6 +54,8 @@ data class RideOfferPayload(
         private const val EXTRA_EXPIRES_IN = "zc_expires_in"
         private const val EXTRA_RIDER_NAME = "zc_rider_name"
         private const val EXTRA_SERVICE_TYPE = "zc_service_type"
+        private const val EXTRA_STOPS_COUNT = "zc_stops_count"
+        private const val EXTRA_STOPS_SUMMARY = "zc_stops_summary"
 
         private const val DEFAULT_EXPIRY_SECONDS = 25
 
@@ -71,6 +78,8 @@ data class RideOfferPayload(
                     ?.takeIf { it > 0 } ?: DEFAULT_EXPIRY_SECONDS,
                 riderName = data["riderName"].orEmpty().trim(),
                 serviceType = data["serviceType"].orEmpty().trim().lowercase(),
+                stopsCount = data["stopsCount"]?.trim()?.toIntOrNull() ?: 0,
+                stopsSummary = data["stopsSummary"].orEmpty().trim(),
             )
         }
 
@@ -91,6 +100,8 @@ data class RideOfferPayload(
                     ?.takeIf { it > 0 } ?: DEFAULT_EXPIRY_SECONDS,
                 riderName = extras?.getString(EXTRA_RIDER_NAME).orEmpty(),
                 serviceType = extras?.getString(EXTRA_SERVICE_TYPE).orEmpty(),
+                stopsCount = extras?.getInt(EXTRA_STOPS_COUNT, 0) ?: 0,
+                stopsSummary = extras?.getString(EXTRA_STOPS_SUMMARY).orEmpty(),
             )
         }
     }

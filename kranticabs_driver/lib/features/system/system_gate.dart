@@ -7,7 +7,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/navigation/navigator_key.dart';
 import '../../core/providers/core_providers.dart';
+import '../../core/services/bubble_service.dart';
 import '../../core/services/ride_offer_channel.dart';
+import '../auth/application/auth_providers.dart';
+import '../dashboard/application/dashboard_providers.dart';
 import '../ride/application/ride_providers.dart';
 
 /// Watches connectivity and GPS status app-wide, pushing/popping the
@@ -45,6 +48,17 @@ class _SystemGateState extends ConsumerState<SystemGate>
           .listen(_onGpsStatus);
     }
 
+    BubbleService.init();
+    // A bubble left over from the last run (the app was swiped away while it was
+    // up) must not sit over the app that is now open.
+    unawaited(BubbleService.hide());
+    for (final delay in const [1, 3]) {
+      Future<void>.delayed(Duration(seconds: delay), BubbleService.hide);
+    }
+    // Ask for the overlay permission as soon as the driver goes online.
+    ref.listenManual(dashboardProvider.select((d) => d.isOnline), (_, online) {
+      if (online) BubbleService.ensurePermission();
+    });
     RideOfferChannel.setPendingActionListener(_drainNativeOfferActions);
     // A cold start launched by Accept on the card has its answer waiting here.
     unawaited(_drainNativeOfferActions());
@@ -52,6 +66,20 @@ class _SystemGateState extends ConsumerState<SystemGate>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Bubble: up while an online driver is in another app, gone when they return.
+    // `hidden`/`paused` mean the app is off screen; `inactive` is only a dialog or
+    // the shade being pulled down, so it is ignored.
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      // Online by either signal, as the home screen decides it: the dashboard
+      // flag alone is false until the toggle is used in this run.
+      final online = ref.read(dashboardProvider).isOnline || (ref.read(authProvider).driver?.isOnline ?? false);
+      unawaited(BubbleService.sync(appInBackground: true, online: online));
+    } else if (state == AppLifecycleState.resumed) {
+      unawaited(BubbleService.hide());
+      // Once more shortly after: coming back through the bubble's own link can
+      // resume the app before the overlay service has finished starting.
+      Future<void>.delayed(const Duration(milliseconds: 700), BubbleService.hide);
+    }
     // The card can be answered while the app sits in the background with no
     // engine listening, so resume is the reliable moment to collect.
     if (state == AppLifecycleState.resumed) {

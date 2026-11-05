@@ -8,10 +8,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app/app.dart';
 import 'core/constants/app_locales.dart';
 import 'core/providers/core_providers.dart';
+import 'core/services/bubble_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/storage/local_storage_service.dart';
 import 'core/storage/secure_storage_service.dart';
 import 'core/utils/marker_icon_loader.dart';
+
+/// Entry point of the floating bubble's own isolate (flutter_overlay_window).
+@pragma('vm:entry-point')
+void overlayMain() {
+  runApp(const MaterialApp(debugShowCheckedModeBanner: false, home: BubbleOverlay()));
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
